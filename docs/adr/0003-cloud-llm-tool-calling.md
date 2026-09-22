@@ -1,0 +1,3 @@
+# LLM via API cloud da Anthropic (Claude), usando tool calling
+
+Consideramos rodar um modelo local via Ollama (sem custo por requisição, sem dependência de rede) e escrever um parser customizado (regex/heurísticas) para interpretar os pedidos do usuário. Optamos pela API da Anthropic com tool calling: o LLM decide qual das ferramentas de dados da FastF1 chamar e com quais parâmetros, em vez de mapearmos frases para chamadas manualmente. Isso torna o sistema mais robusto a variações de linguagem e mais fácil de estender (nova ferramenta = nova definição, sem reescrever um parser), ao custo de exigir conexão com a internet e depender de uma API paga.

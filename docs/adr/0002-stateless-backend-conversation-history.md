@@ -1,0 +1,3 @@
+# Backend stateless; frontend guarda e reenvia o histórico da conversa
+
+O backend não mantém sessão de conversa em memória. A cada pergunta, o frontend reenvia o histórico completo da conversa (perguntas e respostas anteriores) junto com a nova mensagem, e o backend trata cada requisição de forma independente. A alternativa era o backend guardar sessões por usuário em memória, o que sobreviveria a um F5 na página mas se perderia a cada reinício do servidor — comum durante o desenvolvimento local. Como o app roda localmente e para um único usuário, priorizamos simplicidade operacional (nenhuma gestão de sessão, nenhum estado para vazar entre reinícios) em troca de perder o histórico ao recarregar a página.
