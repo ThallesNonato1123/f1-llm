@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import date
 
+from f1llm.errors import SessionDataUnavailable
+
 SUPPORTED_SESSION_TYPES = {"Race", "Qualifying", "Sprint"}
 MIN_SUPPORTED_YEAR = 2018
 
@@ -20,10 +22,6 @@ class SessionResultsResponse:
     found: bool
     results: list[DriverResult] | None = None
     reason: str | None = None
-
-
-class SessionDataUnavailable(Exception):
-    """Raised by load_results when no data exists for the requested session."""
 
 
 def get_session_results(*, year: int, event: str, session_type: str, load_results=None):

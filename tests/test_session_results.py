@@ -2,11 +2,8 @@ from datetime import timedelta
 
 import pytest
 
-from f1llm.tools.session_results import (
-    DriverResult,
-    SessionDataUnavailable,
-    get_session_results,
-)
+from f1llm.errors import SessionDataUnavailable
+from f1llm.tools.session_results import DriverResult, get_session_results
 
 
 def test_rejects_unsupported_session_type():
