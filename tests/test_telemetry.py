@@ -93,3 +93,17 @@ def test_builds_four_stacked_subplots_with_one_line_per_driver_per_channel():
     assert chart["layout"]["yaxis2"]["title"] == "Throttle (%)"
     assert chart["layout"]["yaxis3"]["title"] == "Freio"
     assert chart["layout"]["yaxis4"]["title"] == "Marcha"
+
+
+def test_chart_axes_have_grid_enabled():
+    samples = [
+        TelemetrySample(driver_code="VER", lap_number=45, distance=0.0, speed=100.0, throttle=50.0, brake=False, gear=3),
+    ]
+
+    chart = build_telemetry_chart(samples)
+
+    assert chart["layout"]["xaxis"]["showgrid"] is True
+    assert chart["layout"]["yaxis"]["showgrid"] is True
+    assert chart["layout"]["yaxis2"]["showgrid"] is True
+    assert chart["layout"]["yaxis3"]["showgrid"] is True
+    assert chart["layout"]["yaxis4"]["showgrid"] is True

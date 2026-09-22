@@ -82,7 +82,7 @@ def build_lap_times_chart(laps: list[LapTime]) -> dict:
             for driver_code, driver_laps in laps_by_driver.items()
         ],
         "layout": {
-            "xaxis": {"title": "Volta"},
-            "yaxis": {"title": "Tempo de volta (s)"},
+            "xaxis": {"title": "Volta", "showgrid": True},
+            "yaxis": {"title": "Tempo de volta (s)", "showgrid": True},
         },
     }

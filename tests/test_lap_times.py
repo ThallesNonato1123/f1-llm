@@ -77,3 +77,12 @@ def test_builds_one_chart_line_per_driver_skipping_laps_without_a_time():
     ]
     assert chart["layout"]["xaxis"]["title"] == "Volta"
     assert chart["layout"]["yaxis"]["title"] == "Tempo de volta (s)"
+
+
+def test_chart_axes_have_grid_enabled():
+    laps = [LapTime(lap_number=1, driver_code="VER", seconds=94.123, formatted="0:01:34.123000")]
+
+    chart = build_lap_times_chart(laps)
+
+    assert chart["layout"]["xaxis"]["showgrid"] is True
+    assert chart["layout"]["yaxis"]["showgrid"] is True

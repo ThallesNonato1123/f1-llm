@@ -99,9 +99,9 @@ def build_telemetry_chart(samples: list[TelemetrySample]) -> dict:
                 }
             )
 
-    layout = {"xaxis": {"title": "Distância (m)"}}
+    layout = {"xaxis": {"title": "Distância (m)", "showgrid": True}}
     for _attr, yaxis, title, domain in _CHANNELS:
         layout_key = "yaxis" if yaxis == "y" else f"yaxis{yaxis[1:]}"
-        layout[layout_key] = {"title": title, "domain": domain}
+        layout[layout_key] = {"title": title, "domain": domain, "showgrid": True}
 
     return {"data": data, "layout": layout}
