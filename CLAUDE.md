@@ -23,6 +23,7 @@ Nunca mockamos código nosso — só a FastF1 (a fronteira externa), via injeç�
 Cada tool em `src/f1llm/tools/` segue o mesmo formato:
 - Validação de entrada (`session_type` ∈ {Race, Qualifying, Sprint}, `year` ∈ [2018, ano atual], pelo menos 1 piloto quando aplicável)
   - Tools que dependem do Composto de pneu (ex: `stints.py`) usam `year` ∈ [2019, ano atual]: até 2018 os Compostos tinham nomes absolutos (HYPERSOFT…SUPERHARD) com outro esquema de cores, e o suporte foi descartado de propósito.
+  - Tools que acumulam tempo ao longo da prova (ex: `race_pace.py`) usam `session_type` ∈ {Race, Sprint}: Classificação não tem distância de corrida.
 - Transformação de dados brutos da FastF1 em dataclasses próprias (testada com `load_*` mockado)
 - Resposta estruturada `found: bool` + `reason` em vez de propagar exceções cruas ou inventar dados quando algo não é encontrado (`SessionDataUnavailable`, definida em `f1llm/errors.py`)
 - Construção de gráfico (quando aplicável) como **função pura separada**, sem I/O — testável sem mock (ex: `build_lap_times_chart`, `build_telemetry_chart`). Gráficos usam Plotly (não os helpers matplotlib nativos da FastF1 — ver ADR 0004), com `showgrid: True` explícito em todo eixo.

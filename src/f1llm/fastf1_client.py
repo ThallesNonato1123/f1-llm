@@ -161,3 +161,35 @@ def load_stint_data(year: int, event: str, session_type: str) -> dict:
             for row in session.results[["Abbreviation", "Position"]].to_dict("records")
         ],
     }
+
+
+def load_race_pace_data(year: int, event: str, session_type: str) -> dict:
+    _ensure_cache_enabled()
+
+    try:
+        session = fastf1.get_session(year, event, session_type)
+        session.load(laps=True, telemetry=False, weather=False, messages=False)
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    laps = session.laps
+    if laps is None or laps.empty:
+        raise SessionDataUnavailable(
+            f"No lap data found for {event} {year} {session_type}"
+        )
+
+    lap_columns = ["Driver", "LapNumber", "Time", "Stint", "Position", "TrackStatus"]
+    result_columns = ["Abbreviation", "Position", "TeamName", "TeamColor"]
+    return {
+        "event_name": session.event["EventName"],
+        # Every driver's first lap starts at the same instant: the race start.
+        "race_start": laps[laps["LapNumber"] == 1]["LapStartTime"].min(),
+        "laps": [
+            {column: _none_if_missing(row[column]) for column in lap_columns}
+            for row in laps[lap_columns].to_dict("records")
+        ],
+        "results": [
+            {column: _none_if_missing(row[column]) for column in result_columns}
+            for row in session.results[result_columns].to_dict("records")
+        ],
+    }

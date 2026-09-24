@@ -1,7 +1,15 @@
+from datetime import timedelta
+
 import pytest
 
 from f1llm.errors import SessionDataUnavailable
-from f1llm.fastf1_client import load_laps, load_results, load_stint_data, load_telemetry
+from f1llm.fastf1_client import (
+    load_laps,
+    load_race_pace_data,
+    load_results,
+    load_stint_data,
+    load_telemetry,
+)
 
 
 @pytest.mark.integration
@@ -79,3 +87,28 @@ def test_loads_stint_data_for_every_driver_with_track_status_and_results():
 
     results = {row["Abbreviation"]: row["Position"] for row in data["results"]}
     assert results["VER"] == 1.0
+
+
+@pytest.mark.integration
+def test_loads_race_pace_data_with_lap_end_times_for_every_starter():
+    data = load_race_pace_data(2021, "Abu Dhabi", "Race")
+
+    assert data["event_name"] == "Abu Dhabi Grand Prix"
+
+    drivers_present = {row["Driver"] for row in data["laps"]}
+    assert len(drivers_present) == 19  # MAZ did not start
+
+    # Lap end times never go missing, unlike LapTime (absent on Safety car laps).
+    assert all(row["Time"] is not None for row in data["laps"])
+    first_lap_end = min(row["Time"] for row in data["laps"] if row["LapNumber"] == 1)
+    assert first_lap_end - data["race_start"] > timedelta(seconds=80)  # a plausible opening lap
+
+    teams = {row["Abbreviation"]: (row["TeamName"], row["TeamColor"]) for row in data["results"]}
+    assert teams["VER"][0] == "Red Bull Racing"
+    assert len(teams["VER"][1]) == 6  # bare hex digits, e.g. "0600EF"
+
+
+@pytest.mark.integration
+def test_rejects_race_pace_data_for_a_session_that_did_not_exist_that_year():
+    with pytest.raises(SessionDataUnavailable):
+        load_race_pace_data(2018, "Bahrain", "Sprint")

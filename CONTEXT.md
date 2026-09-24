@@ -29,8 +29,8 @@ A categoria de pneu usada durante um Stint (ex: macio, médio, duro), que determ
 _Avoid_: Tipo de pneu.
 
 **Ritmo de corrida**:
-A consistência dos tempos de Volta de um Piloto durante a Corrida, desconsiderando voltas de entrada/saída de boxes e voltas sob safety car.
-_Avoid_: Pace, desempenho de corrida.
+A diferença acumulada, Volta a Volta, entre um Piloto e um piloto de referência fictício que em cada Volta faz o tempo médio dos Pilotos que ainda estão na mesma volta do líder (retardatários ficam de fora), incluindo voltas de box e sob Safety car ou Virtual safety car. Estar à frente da referência indica ritmo melhor; estar atrás, ritmo pior.
+_Avoid_: Pace, race trace, gap, desempenho de corrida.
 
 **Pneu novo**:
 Um jogo de pneus que não foi usado em nenhuma Volta antes do início do Stint. O oposto é **Pneu usado**.
