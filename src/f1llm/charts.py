@@ -1,6 +1,7 @@
 BACKGROUND_COLOR = "#111111"
 TEXT_COLOR = "#E6E6E6"
 GRID_COLOR = "#333333"
+ZERO_LINE_COLOR = "#666666"
 
 
 def dark_layout(layout: dict) -> dict:
@@ -13,5 +14,5 @@ def dark_layout(layout: dict) -> dict:
     }
     for key, axis in layout.items():
         if key.startswith(("xaxis", "yaxis")):
-            themed[key] = {"gridcolor": GRID_COLOR, **axis}
+            themed[key] = {"gridcolor": GRID_COLOR, "zerolinecolor": ZERO_LINE_COLOR, **axis}
     return themed
