@@ -25,12 +25,24 @@ Uma sequência contínua de Voltas de um Piloto com um único Composto de pneu, 
 _Avoid_: Etapa de pneu, período.
 
 **Composto de pneu**:
-A categoria de pneu usada durante um Stint (ex: macio, médio, duro), que determina seu desempenho e degradação.
+A categoria de pneu usada durante um Stint (ex: macio, médio, duro), que determina seu desempenho e degradação. Cada Composto é identificado pela cor oficial da Pirelli na lateral do pneu: macio vermelho, médio amarelo, duro branco, intermediário verde e chuva azul.
 _Avoid_: Tipo de pneu.
 
 **Ritmo de corrida**:
 A consistência dos tempos de Volta de um Piloto durante a Corrida, desconsiderando voltas de entrada/saída de boxes e voltas sob safety car.
 _Avoid_: Pace, desempenho de corrida.
+
+**Pneu novo**:
+Um jogo de pneus que não foi usado em nenhuma Volta antes do início do Stint. O oposto é **Pneu usado**.
+_Avoid_: Pneu fresco, pneu zero.
+
+**Safety car**:
+Período em que o carro de segurança entra na pista e os Pilotos seguem atrás dele em fila, sem ultrapassar, neutralizando a Sessão.
+_Avoid_: SC (como termo de glossário), carro de segurança.
+
+**Virtual safety car**:
+Período de neutralização sem carro físico na pista, em que cada Piloto precisa respeitar um tempo mínimo por trecho. É distinto do Safety car.
+_Avoid_: VSC (como termo de glossário), safety car virtual.
 
 **Piloto**:
 Pessoa que compete em uma Sessão, identificada por nome, número ou código de três letras (ex: VER, HAM).
