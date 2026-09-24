@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from f1llm.charts import dark_layout
 from f1llm.errors import SessionDataUnavailable
 
 SUPPORTED_SESSION_TYPES = {"Race", "Qualifying", "Sprint"}
@@ -104,4 +105,4 @@ def build_telemetry_chart(samples: list[TelemetrySample]) -> dict:
         layout_key = "yaxis" if yaxis == "y" else f"yaxis{yaxis[1:]}"
         layout[layout_key] = {"title": title, "domain": domain, "showgrid": True}
 
-    return {"data": data, "layout": layout}
+    return {"data": data, "layout": dark_layout(layout)}

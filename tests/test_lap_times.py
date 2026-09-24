@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import pytest
+from dark_theme import assert_dark_theme
 
 from f1llm.errors import SessionDataUnavailable
 from f1llm.tools.lap_times import LapTime, build_lap_times_chart, get_lap_times
@@ -86,3 +87,11 @@ def test_chart_axes_have_grid_enabled():
 
     assert chart["layout"]["xaxis"]["showgrid"] is True
     assert chart["layout"]["yaxis"]["showgrid"] is True
+
+
+def test_chart_uses_the_dark_theme():
+    laps = [LapTime(lap_number=1, driver_code="VER", seconds=94.123, formatted="0:01:34.123000")]
+
+    chart = build_lap_times_chart(laps)
+
+    assert_dark_theme(chart["layout"])

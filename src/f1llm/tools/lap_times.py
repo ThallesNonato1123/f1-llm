@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from f1llm.charts import dark_layout
 from f1llm.errors import SessionDataUnavailable
 
 SUPPORTED_SESSION_TYPES = {"Race", "Qualifying", "Sprint"}
@@ -81,8 +82,10 @@ def build_lap_times_chart(laps: list[LapTime]) -> dict:
             }
             for driver_code, driver_laps in laps_by_driver.items()
         ],
-        "layout": {
-            "xaxis": {"title": "Volta", "showgrid": True},
-            "yaxis": {"title": "Tempo de volta (s)", "showgrid": True},
-        },
+        "layout": dark_layout(
+            {
+                "xaxis": {"title": "Volta", "showgrid": True},
+                "yaxis": {"title": "Tempo de volta (s)", "showgrid": True},
+            }
+        ),
     }

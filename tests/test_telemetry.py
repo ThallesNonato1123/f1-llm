@@ -1,4 +1,5 @@
 import pytest
+from dark_theme import assert_dark_theme
 
 from f1llm.errors import SessionDataUnavailable
 from f1llm.tools.telemetry import (
@@ -107,3 +108,13 @@ def test_chart_axes_have_grid_enabled():
     assert chart["layout"]["yaxis2"]["showgrid"] is True
     assert chart["layout"]["yaxis3"]["showgrid"] is True
     assert chart["layout"]["yaxis4"]["showgrid"] is True
+
+
+def test_chart_uses_the_dark_theme():
+    samples = [
+        TelemetrySample(driver_code="VER", lap_number=45, distance=0.0, speed=100.0, throttle=50.0, brake=False, gear=3),
+    ]
+
+    chart = build_telemetry_chart(samples)
+
+    assert_dark_theme(chart["layout"])
