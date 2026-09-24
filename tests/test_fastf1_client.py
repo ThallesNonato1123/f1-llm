@@ -1,7 +1,7 @@
 import pytest
 
 from f1llm.errors import SessionDataUnavailable
-from f1llm.fastf1_client import load_laps, load_results, load_telemetry
+from f1llm.fastf1_client import load_laps, load_results, load_stint_data, load_telemetry
 
 
 @pytest.mark.integration
@@ -59,3 +59,23 @@ def test_loads_telemetry_for_an_explicitly_requested_lap():
 def test_raises_not_found_for_unknown_driver():
     with pytest.raises(SessionDataUnavailable):
         load_telemetry(2021, "Abu Dhabi", "Race", ["ZZZ"], None)
+
+
+@pytest.mark.integration
+def test_loads_stint_data_for_every_driver_with_track_status_and_results():
+    data = load_stint_data(2021, "Abu Dhabi", "Race")
+
+    assert data["event_name"] == "Abu Dhabi Grand Prix"
+
+    ham_stints = {row["Stint"] for row in data["laps"] if row["Driver"] == "HAM"}
+    assert len(ham_stints) >= 2  # HAM pitted at least once
+
+    drivers_present = {row["Driver"] for row in data["laps"]}
+    assert len(drivers_present) == 19  # every starter, not a filtered subset (MAZ did not start)
+
+    # The race-deciding Safety car came out in the closing laps.
+    leader_statuses = [row["TrackStatus"] for row in data["laps"] if row["Position"] == 1]
+    assert any("4" in (status or "") for status in leader_statuses)
+
+    results = {row["Abbreviation"]: row["Position"] for row in data["results"]}
+    assert results["VER"] == 1.0

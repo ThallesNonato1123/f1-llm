@@ -122,3 +122,42 @@ def load_telemetry(
         )
 
     return rows
+
+
+def _none_if_missing(value):
+    return None if pd.isna(value) else value
+
+
+def load_stint_data(year: int, event: str, session_type: str) -> dict:
+    _ensure_cache_enabled()
+
+    try:
+        session = fastf1.get_session(year, event, session_type)
+        session.load(laps=True, telemetry=False, weather=False, messages=False)
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    laps = session.laps
+    if laps is None or laps.empty:
+        raise SessionDataUnavailable(
+            f"No lap data found for {event} {year} {session_type}"
+        )
+
+    lap_columns = [
+        "Driver", "LapNumber", "Position", "Stint",
+        "Compound", "TyreLife", "FreshTyre", "TrackStatus",
+    ]
+    return {
+        "event_name": session.event["EventName"],
+        "laps": [
+            {column: _none_if_missing(row[column]) for column in lap_columns}
+            for row in laps[lap_columns].to_dict("records")
+        ],
+        "results": [
+            {
+                "Abbreviation": row["Abbreviation"],
+                "Position": _none_if_missing(row["Position"]),
+            }
+            for row in session.results[["Abbreviation", "Position"]].to_dict("records")
+        ],
+    }
