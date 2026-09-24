@@ -3,6 +3,13 @@ from datetime import date
 
 from f1llm.charts import BACKGROUND_COLOR, dark_layout
 from f1llm.errors import SessionDataUnavailable
+from f1llm.track_status import (
+    SafetyCarPeriod,
+    legend_entry,
+    safety_car_band_shapes,
+    safety_car_legend_entries,
+    safety_car_periods,
+)
 
 SUPPORTED_SESSION_TYPES = {"Race", "Qualifying", "Sprint"}
 # Since 2019 compound names (SOFT/MEDIUM/HARD) are relative to each Grand Prix;
@@ -26,13 +33,6 @@ class DriverStints:
     driver_code: str
     position: int | None
     stints: list[Stint]
-
-
-@dataclass(frozen=True)
-class SafetyCarPeriod:
-    kind: str
-    start_lap: int
-    end_lap: int
 
 
 @dataclass(frozen=True)
@@ -107,37 +107,8 @@ def get_stints(
         found=True,
         event_name=data["event_name"],
         drivers=driver_stints,
-        safety_car_periods=_safety_car_periods(data["laps"]),
+        safety_car_periods=safety_car_periods(data["laps"]),
     )
-
-
-def _safety_car_periods(laps: list[dict]) -> list[SafetyCarPeriod]:
-    leader_laps = sorted(
-        (row for row in laps if row["Position"] == 1),
-        key=lambda row: row["LapNumber"],
-    )
-
-    periods: list[SafetyCarPeriod] = []
-    for row in leader_laps:
-        kind = _neutralization_kind(row["TrackStatus"] or "")
-        if kind is None:
-            continue
-        lap_number = int(row["LapNumber"])
-        previous = periods[-1] if periods else None
-        if previous and previous.kind == kind and previous.end_lap == lap_number - 1:
-            periods[-1] = SafetyCarPeriod(kind=kind, start_lap=previous.start_lap, end_lap=lap_number)
-        else:
-            periods.append(SafetyCarPeriod(kind=kind, start_lap=lap_number, end_lap=lap_number))
-    return periods
-
-
-def _neutralization_kind(track_status: str) -> str | None:
-    # FastF1 track status codes: "4" = Safety car, "6"/"7" = Virtual safety car deployed/ending.
-    if "4" in track_status:
-        return "safety_car"
-    if "6" in track_status or "7" in track_status:
-        return "virtual_safety_car"
-    return None
 
 
 def _build_stint(number: int, rows: list[dict]) -> Stint:
@@ -167,15 +138,6 @@ UNKNOWN_COMPOUND_COLOR = "#808080"
 # dotted when FastF1 does not know whether the set was new.
 _FRESHNESS_PATTERNS = {True: "", False: "/", None: "."}
 
-# Translucent so the stint bars stay readable underneath; neither hue collides
-# with a compound color.
-_SAFETY_CAR_BAND_COLORS = {
-    "safety_car": "rgba(255, 135, 0, 0.35)",
-    "virtual_safety_car": "rgba(170, 120, 255, 0.35)",
-}
-
-
-_SAFETY_CAR_LEGEND_NAMES = {"safety_car": "SC", "virtual_safety_car": "VSC"}
 _FRESHNESS_LEGEND_NAMES = {True: "Pneu novo", False: "Pneu usado", None: "Desconhecido"}
 _LEGEND_SWATCH_COLOR = "#BBBBBB"
 _COMPOUND_NAMES_PT = {
@@ -209,16 +171,12 @@ def build_stints_chart(result: StintsResponse, *, year: int, session_type: str) 
     ]
 
     # Legend-only traces: an empty bar per band kind and tyre style actually present.
-    band_kinds = [k for k in _SAFETY_CAR_LEGEND_NAMES if any(p.kind == k for p in result.safety_car_periods)]
     freshness_values = [
         f for f in _FRESHNESS_LEGEND_NAMES
         if any(stint.fresh is f for driver in result.drivers for stint in driver.stints)
     ]
-    legend_entries = [
-        _legend_entry(_SAFETY_CAR_LEGEND_NAMES[kind], {"color": _SAFETY_CAR_BAND_COLORS[kind]})
-        for kind in band_kinds
-    ] + [
-        _legend_entry(
+    legend_entries = safety_car_legend_entries(result.safety_car_periods) + [
+        legend_entry(
             _FRESHNESS_LEGEND_NAMES[fresh],
             {"color": _LEGEND_SWATCH_COLOR, "pattern": {"shape": _FRESHNESS_PATTERNS[fresh]}},
         )
@@ -237,34 +195,8 @@ def build_stints_chart(result: StintsResponse, *, year: int, session_type: str) 
                 "categoryarray": [driver.driver_code for driver in result.drivers],
                 "autorange": "reversed",
             },
-            "shapes": [
-                {
-                    "type": "rect",
-                    "xref": "x",
-                    "yref": "paper",
-                    "x0": period.start_lap - 1,
-                    "x1": period.end_lap,
-                    "y0": 0,
-                    "y1": 1,
-                    "fillcolor": _SAFETY_CAR_BAND_COLORS[period.kind],
-                    "line": {"width": 0},
-                    "layer": "above",
-                }
-                for period in result.safety_car_periods
-            ],
+            "shapes": safety_car_band_shapes(result.safety_car_periods),
         }),
-    }
-
-
-def _legend_entry(name: str, marker: dict) -> dict:
-    return {
-        "type": "bar",
-        "orientation": "h",
-        "name": name,
-        "showlegend": True,
-        "x": [None],
-        "y": [None],
-        "marker": marker,
     }
 
 
