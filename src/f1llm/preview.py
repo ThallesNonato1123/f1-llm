@@ -113,7 +113,12 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(f"f1llm-preview: {result.reason}")
 
     title = f"{request.chart} {request.year} {request.event} {request.session_type}"
-    with tempfile.NamedTemporaryFile("w", suffix=".html", prefix="f1llm-preview-", delete=False) as page:
-        page.write(to_html(result.figure, title=title))
-    print(page.name)
+    print(open_in_browser(result.figure, title=title))
+
+
+def open_in_browser(figure: dict, title: str) -> str:
+    """Writes the chart to a temporary HTML page, opens it and returns its path."""
+    with tempfile.NamedTemporaryFile("w", suffix=".html", prefix="f1llm-", delete=False) as page:
+        page.write(to_html(figure, title=title))
     webbrowser.open(f"file://{page.name}")
+    return page.name
