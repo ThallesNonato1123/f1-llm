@@ -7,11 +7,13 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "anthropic>=1.8.0",
     "fastf1>=3.8.3",
 ]
 
 [project.scripts]
 f1llm-preview = "f1llm.preview:main"
+f1llm-chat = "f1llm.llm.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.10.11,<0.11.0"]
