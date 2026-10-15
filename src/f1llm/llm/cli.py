@@ -7,29 +7,10 @@ import fastf1
 
 from f1llm import fastf1_client
 from f1llm.llm.chat import answer
+from f1llm.llm.production import DEFAULT_EFFORT, DEFAULT_MODEL, claude_create_message
 from f1llm.preview import open_in_browser
 
-DEFAULT_MODEL = "claude-opus-5"
-DEFAULT_EFFORT = "medium"
-MAX_TOKENS = 16000
 EXIT_WORDS = {"sair", "exit", "quit"}
-
-
-def claude_create_message(client: anthropic.Anthropic, *, model: str, effort: str):
-    """The production create_message for answer(): one Messages API call."""
-
-    def create_message(*, system, messages, tools):
-        return client.messages.create(
-            model=model,
-            max_tokens=MAX_TOKENS,
-            system=system,
-            messages=messages,
-            tools=tools,
-            thinking={"type": "adaptive"},
-            output_config={"effort": effort},
-        )
-
-    return create_message
 
 
 def main() -> None:

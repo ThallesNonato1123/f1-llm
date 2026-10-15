@@ -36,6 +36,12 @@ uv run pytest -v                 # com nome de cada teste
 uv run pytest -m integration -v  # dados reais da FastF1 — mais lenta na 1ª vez, cacheada depois (.fastf1cache/)
 ```
 
+## Como rodar a API
+
+```bash
+uv run uvicorn f1llm.api.app:app --reload   # backend FastAPI em http://127.0.0.1:8000, com reload em dev
+```
+
 ## Estado do projeto
 
 Não documentamos aqui quais tools já existem — isso fica desatualizado rápido. Para saber o que já foi implementado: `ls src/f1llm/tools/`, `git log --oneline`, ou rode a suíte de testes.
