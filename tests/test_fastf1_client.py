@@ -4,10 +4,12 @@ import pytest
 
 from f1llm.errors import SessionDataUnavailable
 from f1llm.fastf1_client import (
+    load_driver_standings,
     load_laps,
     load_race_pace_data,
     load_results,
     load_stint_data,
+    load_team_standings,
     load_telemetry,
 )
 
@@ -112,3 +114,34 @@ def test_loads_race_pace_data_with_lap_end_times_for_every_starter():
 def test_rejects_race_pace_data_for_a_session_that_did_not_exist_that_year():
     with pytest.raises(SessionDataUnavailable):
         load_race_pace_data(2018, "Bahrain", "Sprint")
+
+
+@pytest.mark.integration
+def test_loads_driver_standings_through_a_given_event():
+    # 2021 Abu Dhabi was the season finale, decided by 8 points between VER and HAM.
+    rows = load_driver_standings(2021, "Abu Dhabi")
+
+    assert rows[0]["driverCode"] == "VER"
+    assert rows[0]["points"] == 395.5
+    assert rows[1]["driverCode"] == "HAM"
+    assert rows[1]["points"] == 387.5
+
+
+@pytest.mark.integration
+def test_loads_latest_driver_standings_when_no_event_is_given():
+    # 2023 is a closed season: VER won the title with 575 points.
+    rows = load_driver_standings(2023, None)
+
+    assert rows[0]["driverCode"] == "VER"
+    assert rows[0]["points"] == 575.0
+
+
+@pytest.mark.integration
+def test_loads_team_standings_through_a_given_event():
+    # 2021 Abu Dhabi: Mercedes won the constructors' title over Red Bull.
+    rows = load_team_standings(2021, "Abu Dhabi")
+
+    assert rows[0]["constructorName"] == "Mercedes"
+    assert rows[0]["points"] == 613.5
+    assert rows[1]["constructorName"] == "Red Bull"
+    assert rows[1]["points"] == 585.5

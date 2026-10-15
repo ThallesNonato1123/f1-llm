@@ -4,6 +4,12 @@ from dataclasses import asdict, dataclass
 from f1llm.tools.lap_times import build_lap_times_chart, get_lap_times
 from f1llm.tools.race_pace import build_race_pace_chart, get_race_pace
 from f1llm.tools.session_results import get_session_results
+from f1llm.tools.standings import (
+    build_driver_standings_chart,
+    build_team_standings_chart,
+    get_driver_standings,
+    get_team_standings,
+)
 from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
 
@@ -167,12 +173,46 @@ def _telemetry_summary(driver_code, samples):
     }
 
 
+def _driver_standings(tool_input, loaders):
+    result = get_driver_standings(
+        year=tool_input["year"],
+        event=tool_input.get("event"),
+        load_driver_standings=loaders.load_driver_standings,
+    )
+
+    def summarize():
+        return {"standings": [asdict(standing) for standing in result.standings]}
+
+    def chart():
+        return build_driver_standings_chart(result.standings)
+
+    return result, summarize, chart
+
+
+def _team_standings(tool_input, loaders):
+    result = get_team_standings(
+        year=tool_input["year"],
+        event=tool_input.get("event"),
+        load_team_standings=loaders.load_team_standings,
+    )
+
+    def summarize():
+        return {"standings": [asdict(standing) for standing in result.standings]}
+
+    def chart():
+        return build_team_standings_chart(result.standings)
+
+    return result, summarize, chart
+
+
 _HANDLERS = {
     "get_telemetry_comparison": _telemetry,
     "get_race_pace": _race_pace,
     "get_lap_times": _lap_times,
     "get_session_results": _session_results,
     "get_stints": _stints,
+    "get_driver_standings": _driver_standings,
+    "get_team_standings": _team_standings,
 }
 
 
@@ -196,6 +236,14 @@ _PLOT = {
     "type": "boolean",
     "description": "True to also show the user a chart. Use it when the user asks for a chart or comparison "
     "that is easier to see than to read; false for a plain factual question.",
+}
+_STANDINGS_PROPERTIES = {
+    "year": {"type": "integer", "description": "Season year, 2018 or later."},
+    "event": {
+        "type": "string",
+        "description": 'Grand Prix name, country or circuit in English, e.g. "Monza", "Brazil", "Abu Dhabi". '
+        "Omit for the latest standings in the season.",
+    },
 }
 
 
@@ -261,5 +309,19 @@ TOOL_DEFINITIONS = [
         "laps and Safety car / Virtual safety car periods. Omit drivers for the whole field.",
         {**_session_properties(["Race", "Sprint"]), "drivers": _DRIVERS, "plot": _PLOT},
         ["year", "event", "session_type", "plot"],
+    ),
+    _tool(
+        "get_driver_standings",
+        "Drivers' championship standings: position, driver, team, points, wins. Omit event for the latest "
+        "standings in the season; give a Grand Prix to see the standings through that round.",
+        {**_STANDINGS_PROPERTIES, "plot": _PLOT},
+        ["year", "plot"],
+    ),
+    _tool(
+        "get_team_standings",
+        "Teams' (constructors') championship standings: position, team, points, wins. Omit event for the "
+        "latest standings in the season; give a Grand Prix to see the standings through that round.",
+        {**_STANDINGS_PROPERTIES, "plot": _PLOT},
+        ["year", "plot"],
     ),
 ]

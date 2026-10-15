@@ -2,6 +2,7 @@ from pathlib import Path
 
 import fastf1
 import pandas as pd
+from fastf1.ergast import Ergast
 
 from f1llm.errors import SessionDataUnavailable
 
@@ -193,3 +194,45 @@ def load_race_pace_data(year: int, event: str, session_type: str) -> dict:
             for row in session.results[result_columns].to_dict("records")
         ],
     }
+
+
+def load_driver_standings(year: int, event: str | None) -> list[dict]:
+    _ensure_cache_enabled()
+
+    round_number = None
+    if event is not None:
+        try:
+            round_number = fastf1.get_event(year, event)["RoundNumber"]
+        except Exception as exc:
+            raise SessionDataUnavailable(str(exc)) from exc
+
+    try:
+        response = Ergast().get_driver_standings(season=year, round=round_number)
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    if not response.content or response.content[0].empty:
+        raise SessionDataUnavailable(f"No driver standings found for {year}")
+
+    return response.content[0].to_dict("records")
+
+
+def load_team_standings(year: int, event: str | None) -> list[dict]:
+    _ensure_cache_enabled()
+
+    round_number = None
+    if event is not None:
+        try:
+            round_number = fastf1.get_event(year, event)["RoundNumber"]
+        except Exception as exc:
+            raise SessionDataUnavailable(str(exc)) from exc
+
+    try:
+        response = Ergast().get_constructor_standings(season=year, round=round_number)
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    if not response.content or response.content[0].empty:
+        raise SessionDataUnavailable(f"No team standings found for {year}")
+
+    return response.content[0].to_dict("records")

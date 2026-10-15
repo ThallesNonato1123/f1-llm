@@ -272,3 +272,69 @@ def test_telemetry_comes_with_the_telemetry_chart_when_asked_to_plot():
 
     speed_trace = outcome.figure["data"][0]
     assert (speed_trace["name"], speed_trace["x"], speed_trace["y"]) == ("LEC", [0.0, 100.0], [300.0, 320.0])
+
+
+def monza_driver_standings(year, event):
+    assert (year, event) == (2024, "Monza")
+    return [
+        {"position": 1, "driverCode": "VER", "givenName": "Max", "familyName": "Verstappen",
+         "constructorNames": ["Red Bull"], "points": 400.0, "wins": 8},
+    ]
+
+
+def test_driver_standings_sends_the_full_classification_to_the_model():
+    outcome = run_tool(
+        "get_driver_standings",
+        {"year": 2024, "event": "Monza", "plot": False},
+        loaders=SimpleNamespace(load_driver_standings=monza_driver_standings),
+    )
+
+    assert outcome == ToolOutcome(
+        content={
+            "standings": [
+                {"position": 1, "driver_code": "VER", "driver": "Max Verstappen",
+                 "team": "Red Bull", "points": 400.0, "wins": 8},
+            ]
+        },
+        figure=None,
+        is_error=False,
+    )
+
+
+def test_driver_standings_come_with_the_chart_when_asked_to_plot():
+    outcome = run_tool(
+        "get_driver_standings",
+        {"year": 2024, "event": "Monza", "plot": True},
+        loaders=SimpleNamespace(load_driver_standings=monza_driver_standings),
+    )
+
+    assert outcome.figure["data"][0]["x"] == ["VER"]
+
+
+def monza_team_standings(year, event):
+    assert (year, event) == (2024, "Monza")
+    return [{"position": 1, "constructorName": "Red Bull", "points": 600.0, "wins": 12}]
+
+
+def test_team_standings_sends_the_full_classification_to_the_model():
+    outcome = run_tool(
+        "get_team_standings",
+        {"year": 2024, "event": "Monza", "plot": False},
+        loaders=SimpleNamespace(load_team_standings=monza_team_standings),
+    )
+
+    assert outcome == ToolOutcome(
+        content={"standings": [{"position": 1, "team": "Red Bull", "points": 600.0, "wins": 12}]},
+        figure=None,
+        is_error=False,
+    )
+
+
+def test_team_standings_come_with_the_chart_when_asked_to_plot():
+    outcome = run_tool(
+        "get_team_standings",
+        {"year": 2024, "event": "Monza", "plot": True},
+        loaders=SimpleNamespace(load_team_standings=monza_team_standings),
+    )
+
+    assert outcome.figure["data"][0]["x"] == ["Red Bull"]
