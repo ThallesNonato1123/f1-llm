@@ -223,6 +223,38 @@ def test_race_pace_comes_with_the_race_pace_chart_when_asked_to_plot():
     assert [trace["name"] for trace in outcome.figure["data"]] == ["LEC"]
 
 
+def test_gap_to_winner_sends_the_gap_every_five_laps_and_at_the_flag():
+    outcome = run_tool(
+        "get_gap_to_winner",
+        {"year": 2024, "event": "Monza", "session_type": "Race", "plot": False},
+        loaders=SimpleNamespace(load_race_pace_data=monza_pace),
+    )
+
+    assert outcome == ToolOutcome(
+        content={
+            "event_name": "Italian Grand Prix",
+            "drivers": [
+                {"driver_code": "LEC", "position": 1, "team_name": "Ferrari", "pit_out_laps": [],
+                 "gaps_to_winner": [{"lap": 5, "seconds": 0.0}, {"lap": 7, "seconds": 0.0}]},
+                {"driver_code": "NOR", "position": 2, "team_name": "McLaren", "pit_out_laps": [4],
+                 "gaps_to_winner": [{"lap": 5, "seconds": -10.0}, {"lap": 7, "seconds": -14.0}]},
+            ],
+            "safety_car_periods": [],
+        },
+    )
+
+
+def test_gap_to_winner_comes_with_the_chart_when_asked_to_plot():
+    outcome = run_tool(
+        "get_gap_to_winner",
+        {"year": 2024, "event": "Monza", "session_type": "Race", "drivers": ["LEC"], "plot": True},
+        loaders=SimpleNamespace(load_race_pace_data=monza_pace),
+    )
+
+    assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Race"
+    assert [trace["name"] for trace in outcome.figure["data"]] == ["LEC"]
+
+
 def sample(distance, speed, throttle, brake, gear):
     return {"Driver": "LEC", "LapNumber": 12.0, "Distance": distance, "Speed": speed,
             "Throttle": throttle, "Brake": brake, "nGear": gear}

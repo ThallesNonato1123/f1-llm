@@ -132,6 +132,31 @@ def test_builds_race_pace_chart_for_the_requested_drivers():
     assert trace["y"] == [0.0, 1.0]
 
 
+def test_builds_gap_to_winner_chart_for_the_requested_drivers():
+    calls = []
+
+    def load_race_pace_data(year, event, session_type):
+        calls.append((year, event, session_type))
+        return {
+            "event_name": "Italian Grand Prix",
+            "race_start": timedelta(hours=1),
+            "laps": [pace_lap("LEC", 1, 90.0), pace_lap("NOR", 1, 92.0)],
+            "results": [{"Abbreviation": "LEC", "Position": 1.0, "TeamName": "Ferrari", "TeamColor": "E8002D"}],
+        }
+
+    result = build_preview(
+        request("gap_to_winner", ["LEC"], session_type="Sprint"),
+        loaders=SimpleNamespace(load_race_pace_data=load_race_pace_data),
+    )
+
+    assert calls == [(2024, "Monza", "Sprint")]
+    assert result.found is True
+    assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Sprint"
+    [trace] = result.figure["data"]
+    assert trace["name"] == "LEC"
+    assert trace["y"] == [0.0, 0.0]
+
+
 def test_reports_not_found_with_the_tools_reason_when_session_has_no_data():
     def load_laps(year, event, session_type, drivers):
         raise SessionDataUnavailable("No data for Monza 2024 Race")

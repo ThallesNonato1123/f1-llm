@@ -2,6 +2,7 @@ import statistics
 from dataclasses import asdict, dataclass
 
 from f1llm.tools.lap_times import build_lap_times_chart, get_lap_times
+from f1llm.tools.gap_to_winner import build_gap_to_winner_chart, get_gap_to_winner
 from f1llm.tools.race_pace import build_race_pace_chart, get_race_pace
 from f1llm.tools.session_results import get_session_results
 from f1llm.tools.standings import (
@@ -131,6 +132,40 @@ def _race_pace_summary(driver):
     }
 
 
+def _gap_to_winner(tool_input, loaders):
+    result = get_gap_to_winner(
+        **_session(tool_input),
+        drivers=tool_input.get("drivers") or None,
+        load_race_pace_data=loaders.load_race_pace_data,
+    )
+
+    def summarize():
+        return {
+            "event_name": result.event_name,
+            "drivers": [_gap_to_winner_summary(driver) for driver in result.drivers],
+            "safety_car_periods": [asdict(period) for period in result.safety_car_periods],
+        }
+
+    def chart():
+        return build_gap_to_winner_chart(result, year=tool_input["year"], session_type=tool_input["session_type"])
+
+    return result, summarize, chart
+
+
+def _gap_to_winner_summary(driver):
+    last_lap = len(driver.gaps_to_winner)
+    sampled_laps = [lap for lap in range(1, last_lap + 1) if lap % _GAP_SAMPLE_EVERY == 0 or lap == last_lap]
+    return {
+        "driver_code": driver.driver_code,
+        "position": driver.position,
+        "team_name": driver.team_name,
+        "pit_out_laps": driver.pit_out_laps,
+        "gaps_to_winner": [
+            {"lap": lap, "seconds": round(driver.gaps_to_winner[lap - 1], 3)} for lap in sampled_laps
+        ],
+    }
+
+
 FULL_THROTTLE_PCT = 99.0
 
 
@@ -208,6 +243,7 @@ def _team_standings(tool_input, loaders):
 _HANDLERS = {
     "get_telemetry_comparison": _telemetry,
     "get_race_pace": _race_pace,
+    "get_gap_to_winner": _gap_to_winner,
     "get_lap_times": _lap_times,
     "get_session_results": _session_results,
     "get_stints": _stints,
@@ -307,6 +343,14 @@ TOOL_DEFINITIONS = [
         "Race pace: each driver's cumulative gap to a reference driver who laps at the average pace of the "
         "lead-lap drivers (positive = ahead, i.e. faster), sampled every 5 laps and at the flag, plus pit-out "
         "laps and Safety car / Virtual safety car periods. Omit drivers for the whole field.",
+        {**_session_properties(["Race", "Sprint"]), "drivers": _DRIVERS, "plot": _PLOT},
+        ["year", "event", "session_type", "plot"],
+    ),
+    _tool(
+        "get_gap_to_winner",
+        "Each driver's cumulative time gap to the race winner, lap by lap (negative = behind), plus "
+        "pit-out laps and Safety car / Virtual safety car periods. Defaults to the top 6 finishers "
+        "when drivers is omitted.",
         {**_session_properties(["Race", "Sprint"]), "drivers": _DRIVERS, "plot": _PLOT},
         ["year", "event", "session_type", "plot"],
     ),

@@ -32,6 +32,10 @@ _Avoid_: Tipo de pneu.
 A diferença acumulada, Volta a Volta, entre um Piloto e um piloto de referência fictício que em cada Volta faz o tempo médio dos Pilotos que ainda estão na mesma volta do líder (retardatários ficam de fora), incluindo voltas de box e sob Safety car ou Virtual safety car. Estar à frente da referência indica ritmo melhor; estar atrás, ritmo pior.
 _Avoid_: Pace, race trace, gap, desempenho de corrida.
 
+**Gap para o vencedor**:
+A diferença acumulada, Volta a Volta, entre um Piloto e o vencedor real da sessão (o Piloto classificado em 1º), incluindo voltas de box e sob Safety car ou Virtual safety car. É sempre zero ou negativo, exceto para o próprio vencedor, que fica em zero a corrida inteira. Diferente de **Ritmo de corrida**, que usa um piloto de referência fictício em vez do vencedor real.
+_Avoid_: Pace, race trace, ritmo de corrida.
+
 **Pneu novo**:
 Um jogo de pneus que não foi usado em nenhuma Volta antes do início do Stint. O oposto é **Pneu usado**.
 _Avoid_: Pneu fresco, pneu zero.

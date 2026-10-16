@@ -6,12 +6,13 @@ import tempfile
 import webbrowser
 from dataclasses import dataclass
 
+from f1llm.tools.gap_to_winner import build_gap_to_winner_chart, get_gap_to_winner
 from f1llm.tools.lap_times import build_lap_times_chart, get_lap_times
 from f1llm.tools.race_pace import build_race_pace_chart, get_race_pace
 from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
 
-CHARTS = ("lap_times", "telemetry", "stints", "race_pace")
+CHARTS = ("lap_times", "telemetry", "stints", "race_pace", "gap_to_winner")
 
 
 @dataclass(frozen=True)
@@ -67,6 +68,9 @@ def build_preview(request: PreviewRequest, *, loaders) -> PreviewResult:
     elif request.chart == "stints":
         result = get_stints(**all_by_default, load_stint_data=loaders.load_stint_data)
         build = lambda: build_stints_chart(result, **titled)
+    elif request.chart == "gap_to_winner":
+        result = get_gap_to_winner(**all_by_default, load_race_pace_data=loaders.load_race_pace_data)
+        build = lambda: build_gap_to_winner_chart(result, **titled)
     else:
         result = get_race_pace(**all_by_default, load_race_pace_data=loaders.load_race_pace_data)
         build = lambda: build_race_pace_chart(result, **titled)
