@@ -365,6 +365,28 @@ def test_chart_title_names_the_season_grand_prix_and_session():
     assert chart["layout"]["title"] == "2026 Chinese Grand Prix - Sprint"
 
 
+def test_chart_height_grows_with_the_number_of_drivers():
+    few_drivers = stints_response([
+        DriverStints("VER", 1, [stint(1, "HARD", 1, 58)]),
+        DriverStints("HAM", 2, [stint(1, "HARD", 1, 58)]),
+    ])
+    many_drivers = stints_response([
+        DriverStints(code, position, [stint(1, "HARD", 1, 58)])
+        for position, code in enumerate(
+            ["VER", "HAM", "LEC", "SAI", "NOR", "PIA", "RUS", "ALO",
+             "STR", "GAS", "OCO", "ALB", "SAR", "TSU", "RIC", "BOT",
+             "ZHO", "MAG", "HUL", "PER"],
+            start=1,
+        )
+    ])
+
+    few_chart = build_stints_chart(few_drivers, year=2021, session_type="Race")
+    many_chart = build_stints_chart(many_drivers, year=2021, session_type="Race")
+
+    assert few_chart["layout"]["height"] == 150 + 32 * 2
+    assert many_chart["layout"]["height"] == 150 + 32 * 20
+
+
 def test_chart_lists_drivers_top_to_bottom_in_finishing_order():
     result = stints_response([
         DriverStints("VER", 1, [stint(1, "HARD", 1, 58)]),

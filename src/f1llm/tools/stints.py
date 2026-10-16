@@ -187,6 +187,9 @@ def build_stints_chart(result: StintsResponse, *, year: int, session_type: str) 
         "data": stint_bars + legend_entries,
         "layout": dark_layout({
             "title": f"{year} {result.event_name} - {session_type}",
+            # Grows with the driver count so each row keeps enough height to
+            # read, whether comparing 2 drivers or the full grid.
+            "height": 150 + 32 * len(result.drivers),
             "barmode": "overlay",
             "xaxis": {"title": "Volta", "showgrid": True},
             "yaxis": {
