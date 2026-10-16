@@ -80,14 +80,14 @@ def test_builds_four_stacked_subplots_with_one_line_per_driver_per_channel():
     chart = build_telemetry_chart(samples)
 
     assert chart["data"] == [
-        {"type": "scatter", "mode": "lines", "name": "VER", "x": [0.0, 10.0], "y": [100.0, 120.0], "xaxis": "x", "yaxis": "y"},
-        {"type": "scatter", "mode": "lines", "name": "VER", "x": [0.0, 10.0], "y": [50.0, 80.0], "xaxis": "x", "yaxis": "y2"},
-        {"type": "scatter", "mode": "lines", "name": "VER", "x": [0.0, 10.0], "y": [False, False], "xaxis": "x", "yaxis": "y3"},
-        {"type": "scatter", "mode": "lines", "name": "VER", "x": [0.0, 10.0], "y": [3, 4], "xaxis": "x", "yaxis": "y4"},
-        {"type": "scatter", "mode": "lines", "name": "HAM", "x": [0.0], "y": [95.0], "xaxis": "x", "yaxis": "y"},
-        {"type": "scatter", "mode": "lines", "name": "HAM", "x": [0.0], "y": [40.0], "xaxis": "x", "yaxis": "y2"},
-        {"type": "scatter", "mode": "lines", "name": "HAM", "x": [0.0], "y": [True], "xaxis": "x", "yaxis": "y3"},
-        {"type": "scatter", "mode": "lines", "name": "HAM", "x": [0.0], "y": [2], "xaxis": "x", "yaxis": "y4"},
+        {"type": "scatter", "mode": "lines", "name": "VER", "x": [0.0, 10.0], "y": [100.0, 120.0], "xaxis": "x", "yaxis": "y", "line": {"color": "#4C9AFF"}, "showlegend": True},
+        {"type": "scatter", "mode": "lines", "name": "VER", "x": [0.0, 10.0], "y": [50.0, 80.0], "xaxis": "x", "yaxis": "y2", "line": {"color": "#4C9AFF"}, "showlegend": False},
+        {"type": "scatter", "mode": "lines", "name": "VER", "x": [0.0, 10.0], "y": [False, False], "xaxis": "x", "yaxis": "y3", "line": {"color": "#4C9AFF"}, "showlegend": False},
+        {"type": "scatter", "mode": "lines", "name": "VER", "x": [0.0, 10.0], "y": [3, 4], "xaxis": "x", "yaxis": "y4", "line": {"color": "#4C9AFF"}, "showlegend": False},
+        {"type": "scatter", "mode": "lines", "name": "HAM", "x": [0.0], "y": [95.0], "xaxis": "x", "yaxis": "y", "line": {"color": "#FF6B6B"}, "showlegend": True},
+        {"type": "scatter", "mode": "lines", "name": "HAM", "x": [0.0], "y": [40.0], "xaxis": "x", "yaxis": "y2", "line": {"color": "#FF6B6B"}, "showlegend": False},
+        {"type": "scatter", "mode": "lines", "name": "HAM", "x": [0.0], "y": [True], "xaxis": "x", "yaxis": "y3", "line": {"color": "#FF6B6B"}, "showlegend": False},
+        {"type": "scatter", "mode": "lines", "name": "HAM", "x": [0.0], "y": [2], "xaxis": "x", "yaxis": "y4", "line": {"color": "#FF6B6B"}, "showlegend": False},
     ]
     assert chart["layout"]["xaxis"]["title"] == "Distância (m)"
     assert chart["layout"]["yaxis"]["title"] == "Velocidade (km/h)"
@@ -108,6 +108,18 @@ def test_chart_axes_have_grid_enabled():
     assert chart["layout"]["yaxis2"]["showgrid"] is True
     assert chart["layout"]["yaxis3"]["showgrid"] is True
     assert chart["layout"]["yaxis4"]["showgrid"] is True
+
+
+def test_chart_sets_an_explicit_height_for_its_four_stacked_panels():
+    samples = [
+        TelemetrySample(driver_code="VER", lap_number=45, distance=0.0, speed=100.0, throttle=50.0, brake=False, gear=3),
+    ]
+
+    chart = build_telemetry_chart(samples)
+
+    # Without an explicit height the 4 stacked panels only get the page's default
+    # min-height (280px) to share, which crams every title/tick/line together.
+    assert chart["layout"]["height"] == 640
 
 
 def test_chart_uses_the_dark_theme():
