@@ -126,6 +126,45 @@ def load_telemetry(
     return rows
 
 
+def load_top_speeds(
+    year: int, event: str, session_type: str, drivers: list[str] | None = None
+) -> dict:
+    _ensure_cache_enabled()
+
+    try:
+        session = fastf1.get_session(year, event, session_type)
+        session.load(laps=True, telemetry=True, weather=False, messages=False)
+        laps = session.laps
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    if laps is None or laps.empty:
+        raise SessionDataUnavailable(
+            f"No lap data found for {event} {year} {session_type}"
+        )
+
+    driver_codes = drivers if drivers is not None else sorted(laps["Driver"].unique())
+
+    rows: list[dict] = []
+    for driver in driver_codes:
+        for _, lap in laps.pick_drivers(driver).iterlaps():
+            car_data = lap.get_car_data()
+            if car_data.empty:
+                continue
+            rows.append({
+                "Driver": driver,
+                "LapNumber": lap["LapNumber"],
+                "TopSpeed": car_data["Speed"].max(),
+            })
+
+    if not rows:
+        raise SessionDataUnavailable(
+            f"No telemetry-based top speed found for drivers {drivers} in {event} {year} {session_type}"
+        )
+
+    return {"event_name": session.event["EventName"], "rows": rows}
+
+
 def _none_if_missing(value):
     return None if pd.isna(value) else value
 

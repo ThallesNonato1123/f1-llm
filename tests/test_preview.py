@@ -157,6 +157,30 @@ def test_builds_gap_to_winner_chart_for_the_requested_drivers():
     assert trace["y"] == [0.0, 0.0]
 
 
+def test_builds_top_speeds_chart_for_the_requested_drivers():
+    calls = []
+
+    def load_top_speeds(year, event, session_type, drivers):
+        calls.append((year, event, session_type, drivers))
+        return {
+            "event_name": "Italian Grand Prix",
+            "rows": [
+                {"Driver": "LEC", "LapNumber": 1.0, "TopSpeed": 350.0},
+                {"Driver": "LEC", "LapNumber": 2.0, "TopSpeed": 340.0},
+            ],
+        }
+
+    result = build_preview(
+        request("top_speeds", ["LEC"]), loaders=SimpleNamespace(load_top_speeds=load_top_speeds)
+    )
+
+    assert calls == [(2024, "Monza", "Race", ["LEC"])]
+    assert result.found is True
+    [table] = result.figure["data"]
+    assert table["type"] == "table"
+    assert table["cells"]["values"][0] == ["LEC"]
+
+
 def test_reports_not_found_with_the_tools_reason_when_session_has_no_data():
     def load_laps(year, event, session_type, drivers):
         raise SessionDataUnavailable("No data for Monza 2024 Race")

@@ -11,6 +11,7 @@ from f1llm.fastf1_client import (
     load_stint_data,
     load_team_standings,
     load_telemetry,
+    load_top_speeds,
 )
 
 
@@ -176,3 +177,27 @@ def test_loads_team_standings_through_a_given_event():
     assert rows[0]["points"] == 613.5
     assert rows[1]["constructorName"] == "Red Bull"
     assert rows[1]["points"] == 585.5
+
+
+@pytest.mark.integration
+def test_loads_the_true_telemetry_top_speed_for_every_lap_of_the_requested_driver():
+    data = load_top_speeds(2021, "Abu Dhabi", "Race", ["VER"])
+
+    assert data["event_name"] == "Abu Dhabi Grand Prix"
+    ver_lap_1 = next(row for row in data["rows"] if row["LapNumber"] == 1.0)
+    assert ver_lap_1["Driver"] == "VER"
+    assert ver_lap_1["TopSpeed"] == 319.0
+
+
+@pytest.mark.integration
+def test_loads_top_speeds_for_every_driver_when_none_are_requested():
+    data = load_top_speeds(2021, "Abu Dhabi", "Race")
+
+    drivers_present = {row["Driver"] for row in data["rows"]}
+    assert len(drivers_present) == 19  # every starter, not a filtered subset (MAZ did not start)
+
+
+@pytest.mark.integration
+def test_raises_not_found_for_top_speeds_of_a_session_that_did_not_exist_that_year():
+    with pytest.raises(SessionDataUnavailable):
+        load_top_speeds(2018, "Bahrain", "Sprint")

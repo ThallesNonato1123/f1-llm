@@ -255,6 +255,48 @@ def test_gap_to_winner_comes_with_the_chart_when_asked_to_plot():
     assert [trace["name"] for trace in outcome.figure["data"]] == ["LEC"]
 
 
+def monza_top_speeds(year, event, session_type, drivers):
+    assert (year, event, session_type) == (2024, "Monza", "Race")
+    return {
+        "event_name": "Italian Grand Prix",
+        "rows": [
+            {"Driver": "LEC", "LapNumber": 1.0, "TopSpeed": 350.0},
+            {"Driver": "LEC", "LapNumber": 2.0, "TopSpeed": 340.0},
+            {"Driver": "NOR", "LapNumber": 1.0, "TopSpeed": 330.0},
+        ],
+    }
+
+
+def test_top_speeds_sends_each_drivers_own_best_and_average():
+    outcome = run_tool(
+        "get_top_speeds",
+        {"year": 2024, "event": "Monza", "session_type": "Race", "plot": False},
+        loaders=SimpleNamespace(load_top_speeds=monza_top_speeds),
+    )
+
+    assert outcome == ToolOutcome(
+        content={
+            "event_name": "Italian Grand Prix",
+            "session_max": 350.0,
+            "drivers": [
+                {"driver_code": "LEC", "top_speed": 350.0, "average": 345.0},
+                {"driver_code": "NOR", "top_speed": 330.0, "average": 330.0},
+            ],
+        },
+    )
+
+
+def test_top_speeds_comes_with_the_table_chart_when_asked_to_plot():
+    outcome = run_tool(
+        "get_top_speeds",
+        {"year": 2024, "event": "Monza", "session_type": "Race", "plot": True},
+        loaders=SimpleNamespace(load_top_speeds=monza_top_speeds),
+    )
+
+    assert outcome.figure["layout"]["title"].startswith("2024 Italian Grand Prix - Race")
+    assert outcome.figure["data"][0]["type"] == "table"
+
+
 def sample(distance, speed, throttle, brake, gear):
     return {"Driver": "LEC", "LapNumber": 12.0, "Distance": distance, "Speed": speed,
             "Throttle": throttle, "Brake": brake, "nGear": gear}

@@ -11,8 +11,9 @@ from f1llm.tools.lap_times import build_lap_times_chart, get_lap_times
 from f1llm.tools.race_pace import build_race_pace_chart, get_race_pace
 from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
+from f1llm.tools.top_speeds import build_top_speeds_chart, get_top_speeds
 
-CHARTS = ("lap_times", "telemetry", "stints", "race_pace", "gap_to_winner")
+CHARTS = ("lap_times", "telemetry", "stints", "race_pace", "gap_to_winner", "top_speeds")
 
 
 @dataclass(frozen=True)
@@ -71,6 +72,9 @@ def build_preview(request: PreviewRequest, *, loaders) -> PreviewResult:
     elif request.chart == "gap_to_winner":
         result = get_gap_to_winner(**all_by_default, load_race_pace_data=loaders.load_race_pace_data)
         build = lambda: build_gap_to_winner_chart(result, **titled)
+    elif request.chart == "top_speeds":
+        result = get_top_speeds(**all_by_default, load_top_speeds=loaders.load_top_speeds)
+        build = lambda: build_top_speeds_chart(result, **titled)
     else:
         result = get_race_pace(**all_by_default, load_race_pace_data=loaders.load_race_pace_data)
         build = lambda: build_race_pace_chart(result, **titled)

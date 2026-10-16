@@ -13,6 +13,7 @@ from f1llm.tools.standings import (
 )
 from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
+from f1llm.tools.top_speeds import build_top_speeds_chart, get_top_speeds
 
 
 @dataclass(frozen=True)
@@ -166,6 +167,29 @@ def _gap_to_winner_summary(driver):
     }
 
 
+def _top_speeds(tool_input, loaders):
+    result = get_top_speeds(
+        **_session(tool_input),
+        drivers=tool_input.get("drivers") or None,
+        load_top_speeds=loaders.load_top_speeds,
+    )
+
+    def summarize():
+        return {
+            "event_name": result.event_name,
+            "session_max": result.session_max,
+            "drivers": [
+                {"driver_code": driver.driver_code, "top_speed": driver.top_speeds[0], "average": driver.average}
+                for driver in result.drivers
+            ],
+        }
+
+    def chart():
+        return build_top_speeds_chart(result, year=tool_input["year"], session_type=tool_input["session_type"])
+
+    return result, summarize, chart
+
+
 FULL_THROTTLE_PCT = 99.0
 
 
@@ -249,6 +273,7 @@ _HANDLERS = {
     "get_stints": _stints,
     "get_driver_standings": _driver_standings,
     "get_team_standings": _team_standings,
+    "get_top_speeds": _top_speeds,
 }
 
 
@@ -367,5 +392,13 @@ TOOL_DEFINITIONS = [
         "latest standings in the season; give a Grand Prix to see the standings through that round.",
         {**_STANDINGS_PROPERTIES, "plot": _PLOT},
         ["year", "plot"],
+    ),
+    _tool(
+        "get_top_speeds",
+        "Each driver's own 15 fastest laps by true top speed (km/h, from telemetry) in the session, sorted "
+        "descending, with their average and the single fastest speed of the whole session. Omit drivers for "
+        "the whole field.",
+        {**_session_properties(["Race", "Qualifying", "Sprint"]), "drivers": _DRIVERS, "plot": _PLOT},
+        ["year", "event", "session_type", "plot"],
     ),
 ]
