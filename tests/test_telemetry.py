@@ -90,6 +90,9 @@ def test_builds_four_stacked_subplots_with_one_line_per_driver_per_channel():
         {"type": "scatter", "mode": "lines", "name": "HAM", "x": [0.0], "y": [2], "xaxis": "x", "yaxis": "y4", "line": {"color": "#FF6B6B"}, "showlegend": False},
     ]
     assert chart["layout"]["xaxis"]["title"] == "Distância (m)"
+    # Anchored to the bottom-most panel (gear, yaxis4) so the shared x-axis
+    # renders below all 4 stacked panels instead of under the top one.
+    assert chart["layout"]["xaxis"]["anchor"] == "y4"
     assert chart["layout"]["yaxis"]["title"] == "Velocidade (km/h)"
     assert chart["layout"]["yaxis2"]["title"] == "Throttle (%)"
     assert chart["layout"]["yaxis3"]["title"] == "Freio"

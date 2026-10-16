@@ -109,7 +109,12 @@ def build_telemetry_chart(samples: list[TelemetrySample]) -> dict:
                 }
             )
 
-    layout = {"height": 640, "xaxis": {"title": "Distância (m)", "showgrid": True}}
+    layout = {
+        "height": 640,
+        # Anchored to the bottom-most panel's y-axis so the shared x-axis
+        # renders below all 4 stacked panels instead of under the top one.
+        "xaxis": {"title": "Distância (m)", "showgrid": True, "anchor": "y4"},
+    }
     for _attr, yaxis, title, domain in _CHANNELS:
         layout_key = "yaxis" if yaxis == "y" else f"yaxis{yaxis[1:]}"
         layout[layout_key] = {"title": title, "domain": domain, "showgrid": True}
