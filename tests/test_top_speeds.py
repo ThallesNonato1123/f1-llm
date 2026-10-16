@@ -112,11 +112,11 @@ def test_chart_table_has_one_row_per_driver_padded_to_15_laps_plus_average():
     columns = table["cells"]["values"]
     # column 0 = driver codes, columns 1..15 = laps, column 16 = average
     assert columns[0] == ["HAM", "VER"]
-    assert columns[1] == [350.0, 330]
-    assert columns[2] == [338.0, 329]
-    assert columns[3] == [None, 328]  # HAM only has 2 laps: rest is blank
-    assert columns[15] == [None, 316]
-    assert columns[16] == pytest.approx([344.0, 323.0])  # average column
+    assert columns[1] == ["350", "330"]
+    assert columns[2] == ["338", "329"]
+    assert columns[3] == [None, "328"]  # HAM only has 2 laps: rest is blank
+    assert columns[15] == [None, "316"]
+    assert columns[16] == ["344.0", "323.0"]  # average column
     assert table["header"]["values"] == (
         ["Piloto"] + [str(n) for n in range(1, 16)] + ["Média"]
     )
@@ -151,6 +151,28 @@ def test_chart_highlights_the_single_fastest_cell_in_the_session():
     assert colors[1][0] == "#fff59d"  # HAM's 350.0, the session's single highest value
     assert colors[1][1] != "#fff59d"  # VER's 340.0 is high but not the session max
     assert colors[2][0] != "#fff59d"  # HAM's own second-best lap isn't the max either
+
+
+def test_chart_height_grows_with_the_number_of_drivers():
+    few = speeds_response([driver_speeds("VER", [330.0]), driver_speeds("HAM", [320.0])])
+    many = speeds_response([driver_speeds(f"D{i}", [300.0 + i]) for i in range(20)])
+
+    few_chart = build_top_speeds_chart(few, year=2021, session_type="Race")
+    many_chart = build_top_speeds_chart(many, year=2021, session_type="Race")
+
+    assert many_chart["layout"]["height"] > few_chart["layout"]["height"]
+
+
+def test_chart_rounds_lap_speeds_to_whole_numbers_and_average_to_one_decimal():
+    result = speeds_response([driver_speeds("VER", [330.6666, 320.3333], average=325.49999)])
+
+    chart = build_top_speeds_chart(result, year=2021, session_type="Race")
+
+    [table] = chart["data"]
+    values = table["cells"]["values"]
+    assert values[1][0] == "331"  # lap 1, rounded to a whole number
+    assert values[2][0] == "320"  # lap 2
+    assert values[16][0] == "325.5"  # average, one decimal
 
 
 def test_chart_title_footer_and_background():

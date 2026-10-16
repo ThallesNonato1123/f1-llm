@@ -124,17 +124,23 @@ def build_top_speeds_chart(result: TopSpeedsResponse, *, year: int, session_type
         + [colors_for(average_column)]
     )
 
+    display_lap_columns = [
+        [None if value is None else f"{round(value)}" for value in column] for column in lap_columns
+    ]
+    display_average_column = [f"{value:.1f}" for value in average_column]
+
     return {
         "data": [{
             "type": "table",
             "header": {"values": ["Piloto"] + [str(n) for n in range(1, _COLUMN_COUNT + 1)] + ["Média"]},
             "cells": {
-                "values": [driver_column] + lap_columns + [average_column],
+                "values": [driver_column] + display_lap_columns + [display_average_column],
                 "fill": {"color": fill_colors},
             },
         }],
         "layout": {
             "title": f"{year} {result.event_name} - {session_type} - Velocidade máxima (km/h) por volta",
+            "height": 110 + 28 * len(result.drivers),
             "paper_bgcolor": "#ffffff",
             "plot_bgcolor": "#ffffff",
             "annotations": [{
