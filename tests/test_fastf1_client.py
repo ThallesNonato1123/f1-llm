@@ -49,6 +49,14 @@ def test_raises_not_found_when_no_requested_driver_appears():
 
 
 @pytest.mark.integration
+def test_rejects_laps_when_fastf1_fails_to_load_them_without_raising():
+    # Same real, uncached-session failure mode as load_race_pace_data: session.load()
+    # does not raise, but `.laps` stays unset. Must surface as SessionDataUnavailable.
+    with pytest.raises(SessionDataUnavailable):
+        load_laps(2025, "Monza", "Race", ["VER"])
+
+
+@pytest.mark.integration
 def test_loads_telemetry_for_fastest_lap_by_default():
     rows = load_telemetry(2021, "Abu Dhabi", "Race", ["VER"], None)
 
@@ -72,6 +80,13 @@ def test_raises_not_found_for_unknown_driver():
 
 
 @pytest.mark.integration
+def test_rejects_telemetry_when_fastf1_fails_to_load_laps_without_raising():
+    # Same real, uncached-session failure mode as the other loaders.
+    with pytest.raises(SessionDataUnavailable):
+        load_telemetry(2025, "Monza", "Race", ["VER"], None)
+
+
+@pytest.mark.integration
 def test_loads_stint_data_for_every_driver_with_track_status_and_results():
     data = load_stint_data(2021, "Abu Dhabi", "Race")
 
@@ -89,6 +104,13 @@ def test_loads_stint_data_for_every_driver_with_track_status_and_results():
 
     results = {row["Abbreviation"]: row["Position"] for row in data["results"]}
     assert results["VER"] == 1.0
+
+
+@pytest.mark.integration
+def test_rejects_stint_data_when_fastf1_fails_to_load_laps_without_raising():
+    # Same real, uncached-session failure mode as the other loaders.
+    with pytest.raises(SessionDataUnavailable):
+        load_stint_data(2025, "Monza", "Race")
 
 
 @pytest.mark.integration
@@ -114,6 +136,15 @@ def test_loads_race_pace_data_with_lap_end_times_for_every_starter():
 def test_rejects_race_pace_data_for_a_session_that_did_not_exist_that_year():
     with pytest.raises(SessionDataUnavailable):
         load_race_pace_data(2018, "Bahrain", "Sprint")
+
+
+@pytest.mark.integration
+def test_rejects_race_pace_data_when_fastf1_fails_to_load_laps_without_raising():
+    # A valid, uncached session: fastf1.Session.load() does not raise here, but when
+    # its lap timing source is unavailable it only logs a warning and leaves `.laps`
+    # unset. The later `session.laps` access must not escape as a raw DataNotLoadedError.
+    with pytest.raises(SessionDataUnavailable):
+        load_race_pace_data(2025, "Monza", "Race")
 
 
 @pytest.mark.integration

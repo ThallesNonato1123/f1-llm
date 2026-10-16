@@ -44,10 +44,10 @@ def load_laps(
     try:
         session = fastf1.get_session(year, event, session_type)
         session.load(laps=True, telemetry=False, weather=False, messages=False)
+        laps = session.laps
     except Exception as exc:
         raise SessionDataUnavailable(str(exc)) from exc
 
-    laps = session.laps
     if laps is None or laps.empty:
         raise SessionDataUnavailable(
             f"No lap data found for {event} {year} {session_type}"
@@ -81,6 +81,7 @@ def load_telemetry(
     try:
         session = fastf1.get_session(year, event, session_type)
         session.load(laps=True, telemetry=True, weather=False, messages=False)
+        session_laps = session.laps
     except Exception as exc:
         raise SessionDataUnavailable(str(exc)) from exc
 
@@ -88,7 +89,7 @@ def load_telemetry(
     rows: list[dict] = []
 
     for driver in drivers:
-        driver_laps = session.laps.pick_drivers(driver)
+        driver_laps = session_laps.pick_drivers(driver)
         if driver_laps.empty:
             continue
 
@@ -135,10 +136,10 @@ def load_stint_data(year: int, event: str, session_type: str) -> dict:
     try:
         session = fastf1.get_session(year, event, session_type)
         session.load(laps=True, telemetry=False, weather=False, messages=False)
+        laps = session.laps
     except Exception as exc:
         raise SessionDataUnavailable(str(exc)) from exc
 
-    laps = session.laps
     if laps is None or laps.empty:
         raise SessionDataUnavailable(
             f"No lap data found for {event} {year} {session_type}"
@@ -170,10 +171,10 @@ def load_race_pace_data(year: int, event: str, session_type: str) -> dict:
     try:
         session = fastf1.get_session(year, event, session_type)
         session.load(laps=True, telemetry=False, weather=False, messages=False)
+        laps = session.laps
     except Exception as exc:
         raise SessionDataUnavailable(str(exc)) from exc
 
-    laps = session.laps
     if laps is None or laps.empty:
         raise SessionDataUnavailable(
             f"No lap data found for {event} {year} {session_type}"
