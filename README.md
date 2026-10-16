@@ -109,46 +109,6 @@ class SessionResultsResponse:
 
 **5. Gráfico como função pura separada** — `build_*_chart` recebe as dataclasses e devolve o dict do Plotly. Sem I/O, sem rede, sem estado: testável sem mock nenhum. Todo eixo leva `showgrid: True` explícito.
 
-## Como é testado
-
-A regra que mais molda o código: **nunca mockamos código nosso — só a fronteira externa.**
-
-```
-        tools/, llm/, charts.py           fastf1_client.py           FastF1
-        ───────────────────────           ────────────────           ──────
-        testes rápidos, 149               integração, 21            (rede)
-        load_* = lambda                   dados reais
-```
-
-- **Testes rápidos (149)** — as ferramentas recebem um `load_*` falso que devolve dicts fixos. Sem rede, ~2s a suíte inteira.
-- **Testes de integração (21)** — `fastf1_client.py` *é* a fronteira, então mockar seria testar o mock. Roda contra dados reais, marcado `@pytest.mark.integration`, cacheado em `.fastf1cache/`.
-
-A separação vive no `pyproject.toml`, então vale em qualquer invocação, inclusive no CI:
-
-```toml
-addopts = "-m 'not integration'"
-```
-
-Um teste típico, com a fronteira injetada por `lambda`:
-
-```python
-result = get_lap_times(
-    year=2023, event="Bahrain", session_type="Race", drivers=["VER", "HAM"],
-    load_laps=lambda year, event, session_type, drivers: raw_rows,
-)
-
-assert result.found is True
-assert result.laps == [
-    LapTime(lap_number=1, driver_code="VER", seconds=94.123, formatted="0:01:34.123000"),
-    ...
-]
-```
-
-```bash
-uv run pytest                    # suíte rápida, sem rede — o que o CI roda
-uv run pytest -m integration -v  # dados reais da FastF1
-```
-
 ## Como é desenvolvido
 
 O projeto segue a metodologia de desenvolvimento assistido por IA do Matt Pocock, sempre nessa ordem:
@@ -189,6 +149,9 @@ export ANTHROPIC_API_KEY="sua-chave"
 uv run uvicorn f1llm.api.app:app --reload           # app web em :8000
 uv run f1llm-chat                                   # chat no terminal
 uv run f1llm-preview stints 2024 Brazil Race        # um gráfico só, sem LLM
+
+uv run pytest                                       # suíte rápida, sem rede
+uv run pytest -m integration -v                     # dados reais da FastF1
 ```
 
 `F1LLM_MODEL` (padrão `claude-opus-5`) e `F1LLM_EFFORT` (padrão `medium`) trocam o modelo e o esforço de raciocínio.
