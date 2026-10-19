@@ -42,6 +42,19 @@ uv run pytest -m integration -v  # dados reais da FastF1 — mais lenta na 1ª v
 uv run uvicorn f1llm.api.app:app --reload   # backend FastAPI em http://127.0.0.1:8000, com reload em dev
 ```
 
+## Como rodar o frontend
+
+O frontend (`frontend/`) é um projeto React + Vite + Tailwind CSS separado, com toolchain própria (Node 22, pnpm — fixados em `frontend/.mise.toml`). Veja ADR 0006.
+
+```bash
+cd frontend
+pnpm install          # ou `npx pnpm@10.34.3 install` se não tiver pnpm/mise instalado
+pnpm dev              # servidor de dev com hot reload em http://localhost:5173, proxy pra /chat e /health no FastAPI (porta 8000)
+pnpm build            # gera frontend/dist/, que o FastAPI passa a servir na raiz "/"
+```
+
+`frontend/dist/` é gerado (não versionado) — sem buildar pelo menos uma vez, o FastAPI responde 404 na raiz (mas não quebra: `uv run pytest` continua rodando normalmente, exceto o teste que verifica o conteúdo servido em "/", que precisa do build pra passar).
+
 ## Estado do projeto
 
 Não documentamos aqui quais tools já existem — isso fica desatualizado rápido. Para saber o que já foi implementado: `ls src/f1llm/tools/`, `git log --oneline`, ou rode a suíte de testes.

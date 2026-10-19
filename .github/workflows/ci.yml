@@ -19,8 +19,43 @@ jobs:
       - name: Install Python
         run: uv python install
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: uv sync --locked --all-extras --dev
+
+      # So the fast suite's test_root_serves_the_frontend_page has real
+      # content to check: see ADR 0006.
+      - name: Install Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npx --yes pnpm@10.34.3 install
+          npx --yes pnpm@10.34.3 build
 
       - name: Run tests
         run: uv run pytest -v
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npx --yes pnpm@10.34.3 install
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npx --yes pnpm@10.34.3 run typecheck
+
+      - name: Build
+        working-directory: frontend
+        run: npx --yes pnpm@10.34.3 run build

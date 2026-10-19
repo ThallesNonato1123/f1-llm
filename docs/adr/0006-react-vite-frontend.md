@@ -1,0 +1,7 @@
+# Frontend em React + Vite + Tailwind CSS, com build step
+
+Desenhamos uma nova interface no Figma Make, que já exporta o resultado como um projeto React + Vite + Tailwind CSS v4 funcional. Em vez de reproduzir esse design manualmente em HTML/CSS/JS puro, adotamos o projeto exportado como base do frontend daqui pra frente — menos trabalho de tradução e abre caminho pra componentização. Isso reverte a parte da ADR 0001 que descartava um build step: passamos a exigir Node.js e pnpm (versões fixadas em `frontend/.mise.toml`, mesmo espírito do `uv` pro Python) e rodar `pnpm build` antes de o FastAPI poder servir a UI; a separação backend/frontend e o Plotly gerado no backend continuam como estavam.
+
+O frontend vive em `frontend/` na raiz do repo (toolchain própria, separada do backend Python) e builda para `frontend/dist/`, que é o diretório que `app.py` agora serve — `frontend/dist/` é gerado, não versionado. Em desenvolvimento, o Vite roda seu próprio servidor com hot reload, proxyando as chamadas de API (`/chat`, `/health`) para o FastAPI em `127.0.0.1:8000`, em vez de servir tudo pelo próprio FastAPI como antes.
+
+Esta primeira migração troca só a arquitetura (visual, toolchain, build, CI); a lógica real do chat — chamar o backend, renderizar os gráficos Plotly que as tools devolvem — ainda não foi religada no novo frontend, que por ora mostra respostas simuladas do protótipo original. Isso fica para uma etapa seguinte.

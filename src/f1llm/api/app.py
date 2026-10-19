@@ -57,6 +57,11 @@ def chat(body: ChatRequest, create_message=Depends(get_create_message), loaders=
     return ChatResponse(text=result.text, charts=result.charts, history=result.history)
 
 
+# ADR 0006: the frontend is now a separate React+Vite project, built into
+# frontend/dist (gitignored) by `pnpm build`; FastAPI just serves that output.
+_FRONTEND_DIST = Path(__file__).resolve().parent.parent.parent.parent / "frontend" / "dist"
+
 # Mounted last so it never shadows /chat or /health: FastAPI matches routes in
 # registration order, and a root mount would otherwise catch everything first.
-app.mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True), name="static")
+# check_dir=False: don't crash on import before the frontend has been built.
+app.mount("/", StaticFiles(directory=_FRONTEND_DIST, html=True, check_dir=False), name="static")
