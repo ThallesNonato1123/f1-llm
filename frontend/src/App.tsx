@@ -56,23 +56,23 @@ function Chart({ figure }: { figure: PlotlyFigure }) {
 const prompts = [
   {
     icon: "strategy" as const,
-    title: "Analise uma estratégia",
-    text: "Explique o undercut e o overcut em uma corrida",
+    title: "Analise a estratégia de pneus",
+    text: "Quais foram os stints de pneu de cada piloto no GP de Mônaco de 2024?",
   },
   {
     icon: "trophy" as const,
-    title: "Compare pilotos",
-    text: "Senna ou Schumacher: compare os estilos de pilotagem",
+    title: "Compare o ritmo de dois pilotos",
+    text: "Compare o ritmo de corrida de Verstappen e Hamilton no GP de Abu Dhabi de 2021",
   },
   {
     icon: "bolt" as const,
-    title: "Entenda a tecnologia",
-    text: "Como o DRS e a aerodinâmica afetam uma ultrapassagem?",
+    title: "Compare a telemetria de uma volta",
+    text: "Compare velocidade, freio e marcha de Leclerc e Sainz na volta mais rápida de Monza 2023",
   },
   {
     icon: "flag" as const,
-    title: "Reviva grandes momentos",
-    text: "Conte a história da maior corrida da Fórmula 1",
+    title: "Veja o resultado de uma sessão",
+    text: "Qual foi a classificação final do GP de Interlagos de 2024?",
   },
 ];
 
