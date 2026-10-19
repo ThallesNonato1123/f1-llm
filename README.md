@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <img alt="Tela inicial do chat" src="docs/screenshots/chat.png" width="800">
+  <img alt="Tela inicial do chat" src="docs/screenshots/chat.png">
 </p>
 
 ---
