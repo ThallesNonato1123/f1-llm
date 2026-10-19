@@ -21,7 +21,7 @@ function Icon({
   name,
   className = "size-5",
 }: IconProps & {
-  name: "arrow" | "bolt" | "chevron" | "flag" | "new" | "paperclip" | "sparkles" | "strategy" | "trophy";
+  name: "arrow" | "bolt" | "chevron" | "flag" | "new" | "sparkles" | "strategy" | "trophy";
 }) {
   const paths = {
     arrow: <><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></>,
@@ -29,7 +29,6 @@ function Icon({
     chevron: <path d="m9 18 6-6-6-6" />,
     flag: <><path d="M5 22V4" /><path d="M5 4h12l-2 4 2 4H5" /></>,
     new: <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" /></>,
-    paperclip: <path d="m21.4 11.6-8.9 8.9a6 6 0 0 1-8.5-8.5l9.6-9.6a4 4 0 0 1 5.7 5.7l-9.6 9.6a2 2 0 0 1-2.8-2.8l8.9-8.9" />,
     sparkles: <><path d="m12 3 1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2Z" /><path d="m19 14 .7 2.3L22 17l-2.3.7L19 20l-.7-2.3L16 17l2.3-.7Z" /><path d="m5 14 .6 1.9 1.9.6-1.9.6L5 19l-.6-1.9-1.9-.6 1.9-.6Z" /></>,
     strategy: <><circle cx="12" cy="12" r="9" /><path d="M12 3v4m0 10v4M3 12h4m10 0h4" /><circle cx="12" cy="12" r="3" /></>,
     trophy: <><path d="M8 4h8v5a4 4 0 0 1-8 0Z" /><path d="M12 13v5m-4 3h8m-6-3h4M8 6H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4" /></>,
@@ -224,10 +223,6 @@ export default function App() {
               aria-label="Mensagem"
             />
             <div className="composer-actions">
-              <button type="button" className="attach-button" aria-label="Anexar arquivo">
-                <Icon name="paperclip" className="size-[19px]" />
-              </button>
-              <span className="mode"><Icon name="bolt" className="size-3.5" /> Modo análise</span>
               <button
                 type="submit"
                 className="send-button"

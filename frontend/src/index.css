@@ -416,7 +416,6 @@ h1 {
   margin-top: 7px;
 }
 
-.attach-button,
 .send-button {
   display: grid;
   height: 32px;
@@ -424,30 +423,6 @@ h1 {
   place-items: center;
   border: 0;
   border-radius: 9px;
-}
-
-.attach-button {
-  background: transparent;
-  color: #8f8f94;
-}
-
-.attach-button:hover {
-  background: #28282c;
-  color: white;
-}
-
-.mode {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 7px;
-  padding: 5px 8px;
-  color: #85858a;
-  font-size: 10px;
-}
-
-.send-button {
   margin-left: auto;
   background: #e10600;
   color: white;
