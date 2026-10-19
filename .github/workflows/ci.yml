@@ -56,6 +56,10 @@ jobs:
         working-directory: frontend
         run: npx --yes pnpm@10.34.3 run typecheck
 
+      - name: Test
+        working-directory: frontend
+        run: npx --yes pnpm@10.34.3 run test
+
       - name: Build
         working-directory: frontend
         run: npx --yes pnpm@10.34.3 run build

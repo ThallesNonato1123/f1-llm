@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -18,5 +19,10 @@ export default defineConfig({
       "/chat": BACKEND_URL,
       "/health": BACKEND_URL,
     },
+  },
+  test: {
+    environment: "jsdom",
+    setupFiles: "./src/setupTests.ts",
+    globals: true,
   },
 });

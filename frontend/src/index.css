@@ -36,18 +36,6 @@ button {
     #121214;
 }
 
-.sidebar {
-  position: fixed;
-  inset: 0 auto 0 0;
-  z-index: 40;
-  display: flex;
-  width: 280px;
-  flex-direction: column;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  background: #0c0c0e;
-  transition: transform 250ms ease;
-}
-
 .logo {
   display: flex;
   align-items: center;
@@ -76,58 +64,6 @@ button {
   transform: skew(7deg);
 }
 
-.icon-button {
-  display: grid;
-  height: 38px;
-  width: 38px;
-  place-items: center;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: #a8a8ad;
-}
-
-.icon-button:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: white;
-}
-
-.new-chat,
-.side-action {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 11px;
-  border: 0;
-  border-radius: 9px;
-  padding: 11px 12px;
-  color: #d8d8dc;
-  font-size: 13px;
-  text-align: left;
-}
-
-.new-chat {
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: #18181b;
-  color: white;
-  font-weight: 500;
-}
-
-.new-chat:hover {
-  border-color: rgba(225, 6, 0, 0.35);
-  background: #1d1d20;
-}
-
-.side-action {
-  margin-top: 5px;
-  background: transparent;
-}
-
-.side-action:hover,
-.history-item:hover {
-  background: rgba(255, 255, 255, 0.045);
-}
-
 .eyebrow {
   color: #66666c;
   font-size: 10px;
@@ -136,49 +72,50 @@ button {
   text-transform: uppercase;
 }
 
-.history-item {
+.status {
   display: flex;
-  width: 100%;
   align-items: center;
-  justify-content: space-between;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  padding: 9px 12px;
+  gap: 6px;
   color: #a7a7ac;
-  font-size: 13px;
-  text-align: left;
+  font-size: 12px;
 }
 
-.history-item.active {
-  background: rgba(255, 255, 255, 0.055);
-  color: #e8e8ea;
-}
-
-.profile {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 11px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  padding: 9px;
-}
-
-.profile:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.avatar {
-  display: grid;
-  height: 34px;
-  width: 34px;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.status-dot {
+  height: 7px;
+  width: 7px;
   border-radius: 50%;
-  background: #202024;
-  color: #b8b8bc;
+  background: #4ade80;
+}
+
+.status.disconnected .status-dot {
+  background: #f04a45;
+}
+
+.status.disconnected {
+  color: #f0918e;
+}
+
+.new-chat-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  background: #18181b;
+  padding: 7px 12px;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.new-chat-button:hover:not(:disabled) {
+  border-color: rgba(225, 6, 0, 0.35);
+  background: #1d1d20;
+}
+
+.new-chat-button:disabled {
+  color: #68686d;
+  cursor: default;
 }
 
 .main-panel {
@@ -382,6 +319,19 @@ h1 {
   color: #f5f5f5;
 }
 
+.assistant-message.is-error p {
+  color: #f0918e;
+}
+
+.plot {
+  margin-top: 14px;
+  min-height: 360px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.018);
+  overflow: hidden;
+}
+
 .assistant-avatar {
   display: grid;
   height: 30px;
@@ -520,18 +470,6 @@ h1 {
   color: #56565c;
   font-size: 10px;
   text-align: center;
-}
-
-@media (min-width: 1024px) {
-  .sidebar {
-    position: relative;
-    flex-shrink: 0;
-  }
-
-  .composer-wrap {
-    left: 280px;
-    width: auto;
-  }
 }
 
 @media (max-width: 640px) {
