@@ -24,6 +24,10 @@ _Avoid_: Dados do carro.
 A maior velocidade instantânea de Telemetria registrada por um Piloto durante uma Volta.
 _Avoid_: Top speed.
 
+**Velocidade média**:
+A distância total de uma Volta dividida pelo seu tempo total — a velocidade real da volta inteira, não um valor instantâneo. Diferente da Velocidade máxima, que é o pico de um único instante.
+_Avoid_: Mean speed, velocidade média das amostras.
+
 **Parada nos boxes**:
 O Piloto entra no pit lane e, geralmente, troca o Composto de pneu antes de voltar à pista; encerra um Stint e inicia o próximo. Nos gráficos, é marcada pela primeira Volta do novo Stint — a volta em que o Piloto volta à pista.
 _Avoid_: Pit stop, pitstop, box (como termo de glossário).

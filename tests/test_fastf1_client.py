@@ -8,6 +8,7 @@ from f1llm.fastf1_client import (
     load_laps,
     load_race_pace_data,
     load_results,
+    load_speed_quadrant,
     load_stint_data,
     load_team_standings,
     load_telemetry,
@@ -170,6 +171,27 @@ def test_rejects_tyre_degradation_data_when_fastf1_fails_to_load_laps_without_ra
     # Same real, uncached-session failure mode as the other loaders.
     with pytest.raises(SessionDataUnavailable):
         load_tyre_degradation(2025, "Monza", "Race")
+
+
+@pytest.mark.integration
+def test_loads_speed_quadrant_data_with_team_mean_and_top_speed():
+    data = load_speed_quadrant(2021, "Abu Dhabi", "Race")
+
+    assert data["event_name"] == "Abu Dhabi Grand Prix"
+
+    teams_present = {row["Team"] for row in data["laps"]}
+    assert "Red Bull Racing" in teams_present
+
+    row = next(r for r in data["laps"] if r["Team"] == "Red Bull Racing")
+    assert row["TopSpeed"] > 200  # plausible top speed in km/h
+    assert row["LapDistance"] > 4000  # the Yas Marina lap is ~5.5km
+    assert len(row["TeamColor"]) == 6  # bare hex digits, e.g. "0600EF"
+
+
+@pytest.mark.integration
+def test_rejects_speed_quadrant_data_when_fastf1_fails_to_load_laps_without_raising():
+    with pytest.raises(SessionDataUnavailable):
+        load_speed_quadrant(2025, "Monza", "Race")
 
 
 @pytest.mark.integration

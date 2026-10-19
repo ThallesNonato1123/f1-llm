@@ -14,6 +14,7 @@ from f1llm.tools.standings import (
 from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
 from f1llm.tools.top_speeds import build_top_speeds_chart, get_top_speeds
+from f1llm.tools.speed_quadrant import build_speed_quadrant_chart, get_speed_quadrant
 from f1llm.tools.tyre_degradation import build_tyre_degradation_chart, get_tyre_degradation
 
 
@@ -286,6 +287,27 @@ def _tyre_degradation(tool_input, loaders):
     return result, summarize, chart
 
 
+def _speed_quadrant(tool_input, loaders):
+    result = get_speed_quadrant(
+        **_session(tool_input),
+        teams=tool_input.get("teams") or None,
+        load_speed_quadrant=loaders.load_speed_quadrant,
+    )
+
+    def summarize():
+        return {
+            "event_name": result.event_name,
+            "teams": [asdict(team) for team in result.teams],
+        }
+
+    def chart():
+        return build_speed_quadrant_chart(
+            result, year=tool_input["year"], session_type=tool_input["session_type"]
+        )
+
+    return result, summarize, chart
+
+
 _HANDLERS = {
     "get_telemetry_comparison": _telemetry,
     "get_race_pace": _race_pace,
@@ -297,6 +319,7 @@ _HANDLERS = {
     "get_team_standings": _team_standings,
     "get_top_speeds": _top_speeds,
     "get_tyre_degradation": _tyre_degradation,
+    "get_speed_quadrant": _speed_quadrant,
 }
 
 
@@ -437,6 +460,14 @@ TOOL_DEFINITIONS = [
         "there are at least 3 clean laps. 2019 onwards; Race and Sprint only (no single-lap "
         "Qualifying stints). Omit teams for the top 4 finishing teams.",
         {**_session_properties(["Race", "Sprint"]), "teams": _TEAMS, "plot": _PLOT},
+        ["year", "event", "session_type", "plot"],
+    ),
+    _tool(
+        "get_speed_quadrant",
+        "Each team's mean speed (lap distance / lap time) vs true top speed (telemetry peak), from its "
+        "fastest lap of the session — shows which teams trade top speed for cornering/acceleration speed "
+        "and vice versa. One point per team. Omit teams for the whole field.",
+        {**_session_properties(["Race", "Qualifying", "Sprint"]), "teams": _TEAMS, "plot": _PLOT},
         ["year", "event", "session_type", "plot"],
     ),
 ]

@@ -215,6 +215,25 @@ def test_builds_tyre_degradation_chart_from_the_requested_teams():
     assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Degradação de pneu"
 
 
+def test_builds_speed_quadrant_chart_from_the_requested_teams():
+    def load_speed_quadrant(year, event, session_type):
+        return {
+            "event_name": "Italian Grand Prix",
+            "laps": [
+                {"Team": "Ferrari", "TeamColor": "E8002D", "LapTime": timedelta(seconds=90.0),
+                 "TopSpeed": 320.0, "LapDistance": 5000.0},
+            ],
+        }
+
+    result = build_preview(
+        request("speed_quadrant", ["Ferrari"]),
+        loaders=SimpleNamespace(load_speed_quadrant=load_speed_quadrant),
+    )
+
+    assert result.found is True
+    assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race (Melhor volta de cada equipe)"
+
+
 def test_reports_not_found_with_the_tools_reason_when_session_has_no_data():
     def load_laps(year, event, session_type, drivers):
         raise SessionDataUnavailable("No data for Monza 2024 Race")

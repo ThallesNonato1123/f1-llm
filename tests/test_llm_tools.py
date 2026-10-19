@@ -461,3 +461,42 @@ def test_tyre_degradation_comes_with_the_chart_when_asked_to_plot():
     )
 
     assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Degradação de pneu"
+
+
+def monza_quadrant(year, event, session_type):
+    return {
+        "event_name": "Italian Grand Prix",
+        "laps": [
+            {"Team": "Ferrari", "TeamColor": "E8002D", "LapTime": timedelta(seconds=90.0),
+             "TopSpeed": 320.0, "LapDistance": 5000.0},
+        ],
+    }
+
+
+def test_speed_quadrant_sends_each_teams_mean_and_top_speed_without_a_chart_when_not_asked_to_plot():
+    outcome = run_tool(
+        "get_speed_quadrant",
+        {"year": 2024, "event": "Monza", "session_type": "Qualifying", "plot": False},
+        loaders=SimpleNamespace(load_speed_quadrant=monza_quadrant),
+    )
+
+    assert outcome == ToolOutcome(
+        content={
+            "event_name": "Italian Grand Prix",
+            "teams": [
+                {"team": "Ferrari", "team_color": "#E8002D", "mean_speed": 200.0, "top_speed": 320.0},
+            ],
+        },
+        figure=None,
+        is_error=False,
+    )
+
+
+def test_speed_quadrant_comes_with_the_chart_when_asked_to_plot():
+    outcome = run_tool(
+        "get_speed_quadrant",
+        {"year": 2024, "event": "Monza", "session_type": "Qualifying", "plot": True},
+        loaders=SimpleNamespace(load_speed_quadrant=monza_quadrant),
+    )
+
+    assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Qualifying (Melhor volta de cada equipe)"

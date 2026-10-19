@@ -290,6 +290,54 @@ def load_tyre_degradation(year: int, event: str, session_type: str) -> dict:
     }
 
 
+def load_speed_quadrant(year: int, event: str, session_type: str) -> dict:
+    _ensure_cache_enabled()
+
+    try:
+        session = fastf1.get_session(year, event, session_type)
+        session.load(laps=True, telemetry=True, weather=False, messages=False)
+        laps = session.laps
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    if laps is None or laps.empty:
+        raise SessionDataUnavailable(
+            f"No lap data found for {event} {year} {session_type}"
+        )
+
+    result_columns = ["Abbreviation", "TeamName", "TeamColor"]
+    team_by_driver = {
+        row["Abbreviation"]: (row["TeamName"], row["TeamColor"])
+        for row in session.results[result_columns].to_dict("records")
+    }
+
+    rows: list[dict] = []
+    for driver in sorted(laps["Driver"].unique()):
+        fastest = laps.pick_drivers(driver).pick_fastest()
+        if fastest is None or pd.isna(fastest["LapTime"]):
+            continue
+
+        car_data = fastest.get_car_data().add_distance()
+        if car_data.empty:
+            continue
+
+        team, team_color = team_by_driver.get(driver, (None, None))
+        rows.append({
+            "Team": team,
+            "TeamColor": team_color,
+            "LapTime": fastest["LapTime"],
+            "TopSpeed": car_data["Speed"].max(),
+            "LapDistance": car_data["Distance"].iloc[-1],
+        })
+
+    if not rows:
+        raise SessionDataUnavailable(
+            f"No telemetry-based lap data found for {event} {year} {session_type}"
+        )
+
+    return {"event_name": session.event["EventName"], "laps": rows}
+
+
 def load_driver_standings(year: int, event: str | None) -> list[dict]:
     _ensure_cache_enabled()
 
