@@ -13,6 +13,10 @@
   <img alt="testes" src="https://img.shields.io/badge/testes-170-success">
 </p>
 
+<p align="center">
+  <img alt="Tela inicial do chat" src="docs/screenshots/chat.png" width="800">
+</p>
+
 ---
 
 Você pergunta *"compara o ritmo de corrida do Verstappen e do Norris em Interlagos 2024"*. O modelo escolhe qual ferramenta de dados chamar e com quais parâmetros, a ferramenta lê os dados oficiais da sessão, e a resposta volta em texto com um gráfico interativo ao lado.
