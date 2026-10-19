@@ -144,7 +144,7 @@ Termos como **Stint**, **Composto de pneu**, **Ritmo de corrida** e **Gap para o
 
 ```bash
 uv sync
-export ANTHROPIC_API_KEY="sua-chave"
+cp .env.example .env    # preencha ANTHROPIC_API_KEY
 
 uv run uvicorn f1llm.api.app:app --reload           # app web em :8000
 uv run f1llm-chat                                   # chat no terminal
@@ -154,4 +154,13 @@ uv run pytest                                       # suíte rápida, sem rede
 uv run pytest -m integration -v                     # dados reais da FastF1
 ```
 
-`F1LLM_MODEL` (padrão `claude-opus-5`) e `F1LLM_EFFORT` (padrão `medium`) trocam o modelo e o esforço de raciocínio.
+`F1LLM_MODEL` (padrão `claude-opus-5`) e `F1LLM_EFFORT` (padrão `medium`) trocam o modelo e o esforço de raciocínio. Ambas podem ir no mesmo `.env`.
+
+### Docker
+
+```bash
+cp .env.example .env    # preencha ANTHROPIC_API_KEY
+docker compose up --build
+```
+
+Sobe o backend FastAPI (com o frontend já buildado dentro da imagem) em `http://localhost:8000`. O cache da FastF1 persiste num volume nomeado entre execuções.

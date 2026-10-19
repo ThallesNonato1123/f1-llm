@@ -1,0 +1,12 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - fastf1-cache:/app/.fastf1cache
+
+volumes:
+  fastf1-cache:
