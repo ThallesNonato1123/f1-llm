@@ -20,7 +20,7 @@ def safety_car_periods(laps: list[dict]) -> list[SafetyCarPeriod]:
 
     periods: list[SafetyCarPeriod] = []
     for row in leader_laps:
-        kind = _neutralization_kind(row["TrackStatus"] or "")
+        kind = neutralization_kind(row["TrackStatus"] or "")
         if kind is None:
             continue
         lap_number = int(row["LapNumber"])
@@ -32,7 +32,7 @@ def safety_car_periods(laps: list[dict]) -> list[SafetyCarPeriod]:
     return periods
 
 
-def _neutralization_kind(track_status: str) -> str | None:
+def neutralization_kind(track_status: str) -> str | None:
     # FastF1 track status codes: "4" = Safety car, "6"/"7" = Virtual safety car deployed/ending.
     if "4" in track_status:
         return "safety_car"

@@ -12,6 +12,7 @@ from f1llm.fastf1_client import (
     load_team_standings,
     load_telemetry,
     load_top_speeds,
+    load_tyre_degradation,
 )
 
 
@@ -146,6 +147,29 @@ def test_rejects_race_pace_data_when_fastf1_fails_to_load_laps_without_raising()
     # unset. The later `session.laps` access must not escape as a raw DataNotLoadedError.
     with pytest.raises(SessionDataUnavailable):
         load_race_pace_data(2025, "Monza", "Race")
+
+
+@pytest.mark.integration
+def test_loads_tyre_degradation_data_with_teams_and_compounds():
+    data = load_tyre_degradation(2021, "Abu Dhabi", "Race")
+
+    assert data["event_name"] == "Abu Dhabi Grand Prix"
+
+    teams_present = {row["Team"] for row in data["laps"]}
+    assert "Red Bull Racing" in teams_present
+
+    compounds_present = {row["Compound"] for row in data["laps"]}
+    assert compounds_present & {"SOFT", "MEDIUM", "HARD"}
+
+    team_colors = {row["Team"]: row["TeamColor"] for row in data["results"]}
+    assert len(team_colors["Red Bull Racing"]) == 6  # bare hex digits, e.g. "0600EF"
+
+
+@pytest.mark.integration
+def test_rejects_tyre_degradation_data_when_fastf1_fails_to_load_laps_without_raising():
+    # Same real, uncached-session failure mode as the other loaders.
+    with pytest.raises(SessionDataUnavailable):
+        load_tyre_degradation(2025, "Monza", "Race")
 
 
 @pytest.mark.integration

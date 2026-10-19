@@ -236,6 +236,60 @@ def load_race_pace_data(year: int, event: str, session_type: str) -> dict:
     }
 
 
+def load_tyre_degradation(year: int, event: str, session_type: str) -> dict:
+    _ensure_cache_enabled()
+
+    try:
+        session = fastf1.get_session(year, event, session_type)
+        session.load(laps=True, telemetry=False, weather=False, messages=False)
+        # ADR 0005: FastF1's own outlier filter, reused instead of a homemade threshold.
+        laps = session.laps.pick_quicklaps()
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    if laps is None or laps.empty:
+        raise SessionDataUnavailable(
+            f"No lap data found for {event} {year} {session_type}"
+        )
+
+    result_columns = ["Abbreviation", "Position", "TeamName", "TeamColor"]
+    results = [
+        {column: _none_if_missing(row[column]) for column in result_columns}
+        for row in session.results[result_columns].to_dict("records")
+    ]
+    team_by_driver = {row["Abbreviation"]: row["TeamName"] for row in results}
+
+    lap_columns = [
+        "Driver", "Compound", "LapNumber", "TyreLife", "LapTime",
+        "TrackStatus", "PitInTime", "PitOutTime",
+    ]
+    return {
+        "event_name": session.event["EventName"],
+        "laps": [
+            {
+                "Team": team_by_driver.get(row["Driver"]),
+                "Compound": row["Compound"],
+                "LapNumber": row["LapNumber"],
+                "TyreLife": _none_if_missing(row["TyreLife"]),
+                "LapTime": row["LapTime"],
+                "TrackStatus": row["TrackStatus"],
+                "PitInTime": _none_if_missing(row["PitInTime"]),
+                "PitOutTime": _none_if_missing(row["PitOutTime"]),
+            }
+            for row in laps[lap_columns].to_dict("records")
+        ],
+        "results": [
+            {
+                "Abbreviation": row["Abbreviation"],
+                "Position": row["Position"],
+                "Team": row["TeamName"],
+                "TeamColor": row["TeamColor"],
+            }
+            for row in results
+        ],
+    }
+
+
 def load_driver_standings(year: int, event: str | None) -> list[dict]:
     _ensure_cache_enabled()
 

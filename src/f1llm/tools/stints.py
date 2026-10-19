@@ -140,7 +140,7 @@ _FRESHNESS_PATTERNS = {True: "", False: "/", None: "."}
 
 _FRESHNESS_LEGEND_NAMES = {True: "Pneu novo", False: "Pneu usado", None: "Desconhecido"}
 _LEGEND_SWATCH_COLOR = "#BBBBBB"
-_COMPOUND_NAMES_PT = {
+COMPOUND_NAMES_PT = {
     "SOFT": "Macio",
     "MEDIUM": "Médio",
     "HARD": "Duro",
@@ -204,7 +204,7 @@ def build_stints_chart(result: StintsResponse, *, year: int, session_type: str) 
 
 
 def _stint_hover_text(driver_code: str, stint: Stint) -> str:
-    compound = _COMPOUND_NAMES_PT.get(stint.compound, "Desconhecido")
+    compound = COMPOUND_NAMES_PT.get(stint.compound, "Desconhecido")
     freshness = _FRESHNESS_LEGEND_NAMES[stint.fresh]
     if stint.start_lap == stint.end_lap:
         laps = f"Volta {stint.start_lap}"

@@ -12,8 +12,11 @@ from f1llm.tools.race_pace import build_race_pace_chart, get_race_pace
 from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
 from f1llm.tools.top_speeds import build_top_speeds_chart, get_top_speeds
+from f1llm.tools.tyre_degradation import build_tyre_degradation_chart, get_tyre_degradation
 
-CHARTS = ("lap_times", "telemetry", "stints", "race_pace", "gap_to_winner", "top_speeds")
+CHARTS = (
+    "lap_times", "telemetry", "stints", "race_pace", "gap_to_winner", "top_speeds", "tyre_degradation",
+)
 
 
 @dataclass(frozen=True)
@@ -75,6 +78,13 @@ def build_preview(request: PreviewRequest, *, loaders) -> PreviewResult:
     elif request.chart == "top_speeds":
         result = get_top_speeds(**all_by_default, load_top_speeds=loaders.load_top_speeds)
         build = lambda: build_top_speeds_chart(result, **titled)
+    elif request.chart == "tyre_degradation":
+        # The "drivers" slot doubles as team names for this chart.
+        result = get_tyre_degradation(
+            year=request.year, event=request.event, session_type=request.session_type,
+            teams=request.drivers or None, load_tyre_degradation=loaders.load_tyre_degradation,
+        )
+        build = lambda: build_tyre_degradation_chart(result, **titled)
     else:
         result = get_race_pace(**all_by_default, load_race_pace_data=loaders.load_race_pace_data)
         build = lambda: build_race_pace_chart(result, **titled)

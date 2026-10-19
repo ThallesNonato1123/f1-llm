@@ -20,8 +20,16 @@ _Avoid_: Giro.
 Dados contínuos do carro capturados ao longo de uma Volta (velocidade, marcha, acelerador, freio).
 _Avoid_: Dados do carro.
 
+**Velocidade máxima**:
+A maior velocidade instantânea de Telemetria registrada por um Piloto durante uma Volta.
+_Avoid_: Top speed.
+
+**Parada nos boxes**:
+O Piloto entra no pit lane e, geralmente, troca o Composto de pneu antes de voltar à pista; encerra um Stint e inicia o próximo. Nos gráficos, é marcada pela primeira Volta do novo Stint — a volta em que o Piloto volta à pista.
+_Avoid_: Pit stop, pitstop, box (como termo de glossário).
+
 **Stint**:
-Uma sequência contínua de Voltas de um Piloto com um único Composto de pneu, sem parada nos boxes.
+Uma sequência contínua de Voltas de um Piloto com um único Composto de pneu, sem **Parada nos boxes**.
 _Avoid_: Etapa de pneu, período.
 
 **Composto de pneu**:
@@ -40,6 +48,10 @@ _Avoid_: Pace, race trace, ritmo de corrida.
 Um jogo de pneus que não foi usado em nenhuma Volta antes do início do Stint. O oposto é **Pneu usado**.
 _Avoid_: Pneu fresco, pneu zero.
 
+**Idade do pneu**:
+O número de Voltas que um jogo de pneus específico já rodou, incluindo Voltas em outras Sessões se o jogo tiver sido reaproveitado (ex: um jogo usado na Classificação e levado para a Corrida não começa a Corrida com Idade do pneu zero). Dentro de um Stint, a Idade do pneu aumenta uma Volta por Volta. Um **Pneu novo** tem Idade do pneu zero no início do Stint.
+_Avoid_: Idade do pneu desde o início do Stint.
+
 **Safety car**:
 Período em que o carro de segurança entra na pista e os Pilotos seguem atrás dele em fila, sem ultrapassar, neutralizando a Sessão.
 _Avoid_: SC (como termo de glossário), carro de segurança.
@@ -47,6 +59,18 @@ _Avoid_: SC (como termo de glossário), carro de segurança.
 **Virtual safety car**:
 Período de neutralização sem carro físico na pista, em que cada Piloto precisa respeitar um tempo mínimo por trecho. É distinto do Safety car.
 _Avoid_: VSC (como termo de glossário), safety car virtual.
+
+**Volta limpa**:
+Uma Volta que representa o ritmo real do carro, sem efeitos atípicos: exclui a Volta de entrada e a de saída de box, Voltas sob Safety car ou Virtual safety car, e Voltas significativamente mais lentas que o ritmo do Piloto no Stint.
+_Avoid_: Volta válida, volta de referência.
+
+**Tempo de volta corrigido por combustível**:
+Uma estimativa do Tempo de volta que o carro faria sem o peso do combustível, descontando o efeito de o carro ficar mais leve — e mais rápido — ao longo da Sessão. Permite comparar Voltas do início e do fim de um Stint longo sem o viés do combustível.
+_Avoid_: Tempo de volta ajustado, lap time normalizado.
+
+**Degradação de pneu**:
+O quanto o Tempo de volta corrigido por combustível piora a cada Volta de Idade do pneu dentro de um mesmo Composto, para um Piloto ou Equipe, calculada só sobre Voltas limpas. Maior degradação indica queda de desempenho mais rápida ao longo do Stint.
+_Avoid_: Desgaste de pneu, wear.
 
 **Piloto**:
 Pessoa que compete em uma Sessão, identificada por nome, número ou código de três letras (ex: VER, HAM).

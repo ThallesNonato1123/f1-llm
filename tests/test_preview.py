@@ -21,6 +21,18 @@ def test_parses_positional_chart_year_event_session_and_drivers():
     )
 
 
+def test_parses_tyre_degradation_teams_through_the_drivers_slot():
+    request = parse_args(["tyre_degradation", "2024", "Monza", "Race", "Ferrari", "McLaren"])
+
+    assert request == PreviewRequest(
+        chart="tyre_degradation",
+        year=2024,
+        event="Monza",
+        session_type="Race",
+        drivers=["Ferrari", "McLaren"],
+    )
+
+
 def test_rejects_unknown_chart():
     with pytest.raises(SystemExit):
         parse_args(["pit_stops", "2024", "Monza", "Race"])
@@ -179,6 +191,28 @@ def test_builds_top_speeds_chart_for_the_requested_drivers():
     [table] = result.figure["data"]
     assert table["type"] == "table"
     assert table["cells"]["values"][0] == ["LEC"]
+
+
+def test_builds_tyre_degradation_chart_from_the_requested_teams():
+    def load_tyre_degradation(year, event, session_type):
+        return {
+            "event_name": "Italian Grand Prix",
+            "laps": [
+                {"Team": "Ferrari", "Compound": "SOFT", "LapNumber": 1.0, "TyreLife": 1.0,
+                 "LapTime": timedelta(seconds=92.0), "TrackStatus": "1", "PitInTime": None, "PitOutTime": None},
+                {"Team": "Ferrari", "Compound": "SOFT", "LapNumber": 2.0, "TyreLife": 2.0,
+                 "LapTime": timedelta(seconds=89.0), "TrackStatus": "1", "PitInTime": None, "PitOutTime": None},
+            ],
+            "results": [{"Abbreviation": "LEC", "Position": 1.0, "Team": "Ferrari", "TeamColor": "E8002D"}],
+        }
+
+    result = build_preview(
+        request("tyre_degradation", ["Ferrari"]),
+        loaders=SimpleNamespace(load_tyre_degradation=load_tyre_degradation),
+    )
+
+    assert result.found is True
+    assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Degradação de pneu"
 
 
 def test_reports_not_found_with_the_tools_reason_when_session_has_no_data():

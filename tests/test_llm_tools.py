@@ -412,3 +412,52 @@ def test_team_standings_come_with_the_chart_when_asked_to_plot():
     )
 
     assert outcome.figure["data"][0]["x"] == ["Red Bull"]
+
+
+def monza_degradation(year, event, session_type):
+    return {
+        "event_name": "Italian Grand Prix",
+        "laps": [
+            {"Team": "Ferrari", "Compound": "SOFT", "LapNumber": 1.0, "TyreLife": 1.0,
+             "LapTime": timedelta(seconds=92.0), "TrackStatus": "1", "PitInTime": None, "PitOutTime": None},
+            {"Team": "Ferrari", "Compound": "SOFT", "LapNumber": 2.0, "TyreLife": 2.0,
+             "LapTime": timedelta(seconds=89.0), "TrackStatus": "1", "PitInTime": None, "PitOutTime": None},
+        ],
+        "results": [{"Abbreviation": "LEC", "Position": 1.0, "Team": "Ferrari", "TeamColor": "E8002D"}],
+    }
+
+
+def test_tyre_degradation_sends_each_teams_compound_entries_without_a_chart_when_not_asked_to_plot():
+    outcome = run_tool(
+        "get_tyre_degradation",
+        {"year": 2024, "event": "Monza", "session_type": "Race", "teams": ["Ferrari"], "plot": False},
+        loaders=SimpleNamespace(load_tyre_degradation=monza_degradation),
+    )
+
+    assert outcome == ToolOutcome(
+        content={
+            "event_name": "Italian Grand Prix",
+            "entries": [
+                {
+                    "team": "Ferrari",
+                    "compound": "SOFT",
+                    "team_color": "#E8002D",
+                    "points": [{"tyre_age": 1, "fuel_corrected_lap_time": 89.0}],
+                    "slope": None,
+                    "r_squared": None,
+                }
+            ],
+        },
+        figure=None,
+        is_error=False,
+    )
+
+
+def test_tyre_degradation_comes_with_the_chart_when_asked_to_plot():
+    outcome = run_tool(
+        "get_tyre_degradation",
+        {"year": 2024, "event": "Monza", "session_type": "Race", "teams": ["Ferrari"], "plot": True},
+        loaders=SimpleNamespace(load_tyre_degradation=monza_degradation),
+    )
+
+    assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Degradação de pneu"

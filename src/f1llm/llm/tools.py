@@ -14,6 +14,7 @@ from f1llm.tools.standings import (
 from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
 from f1llm.tools.top_speeds import build_top_speeds_chart, get_top_speeds
+from f1llm.tools.tyre_degradation import build_tyre_degradation_chart, get_tyre_degradation
 
 
 @dataclass(frozen=True)
@@ -264,6 +265,27 @@ def _team_standings(tool_input, loaders):
     return result, summarize, chart
 
 
+def _tyre_degradation(tool_input, loaders):
+    result = get_tyre_degradation(
+        **_session(tool_input),
+        teams=tool_input.get("teams") or None,
+        load_tyre_degradation=loaders.load_tyre_degradation,
+    )
+
+    def summarize():
+        return {
+            "event_name": result.event_name,
+            "entries": [asdict(entry) for entry in result.entries],
+        }
+
+    def chart():
+        return build_tyre_degradation_chart(
+            result, year=tool_input["year"], session_type=tool_input["session_type"]
+        )
+
+    return result, summarize, chart
+
+
 _HANDLERS = {
     "get_telemetry_comparison": _telemetry,
     "get_race_pace": _race_pace,
@@ -274,6 +296,7 @@ _HANDLERS = {
     "get_driver_standings": _driver_standings,
     "get_team_standings": _team_standings,
     "get_top_speeds": _top_speeds,
+    "get_tyre_degradation": _tyre_degradation,
 }
 
 
@@ -297,6 +320,12 @@ _PLOT = {
     "type": "boolean",
     "description": "True to also show the user a chart. Use it when the user asks for a chart or comparison "
     "that is easier to see than to read; false for a plain factual question.",
+}
+_TEAMS = {
+    "type": "array",
+    "items": {"type": "string"},
+    "description": 'Team names to compare, e.g. ["Ferrari", "Red Bull Racing"]. Omit for the top 4 '
+    "finishing teams.",
 }
 _STANDINGS_PROPERTIES = {
     "year": {"type": "integer", "description": "Season year, 2018 or later."},
@@ -399,6 +428,15 @@ TOOL_DEFINITIONS = [
         "descending, with their average and the single fastest speed of the whole session. Omit drivers for "
         "the whole field.",
         {**_session_properties(["Race", "Qualifying", "Sprint"]), "drivers": _DRIVERS, "plot": _PLOT},
+        ["year", "event", "session_type", "plot"],
+    ),
+    _tool(
+        "get_tyre_degradation",
+        "How each team's dry tyre compounds (SOFT/MEDIUM/HARD) degrade with tyre age: fuel-corrected "
+        "lap time per clean lap, plus the fitted slope (seconds per lap of tyre age) and R^2 when "
+        "there are at least 3 clean laps. 2019 onwards; Race and Sprint only (no single-lap "
+        "Qualifying stints). Omit teams for the top 4 finishing teams.",
+        {**_session_properties(["Race", "Sprint"]), "teams": _TEAMS, "plot": _PLOT},
         ["year", "event", "session_type", "plot"],
     ),
 ]
