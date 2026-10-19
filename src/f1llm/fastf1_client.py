@@ -338,6 +338,51 @@ def load_speed_quadrant(year: int, event: str, session_type: str) -> dict:
     return {"event_name": session.event["EventName"], "laps": rows}
 
 
+def load_gg_diagram(year: int, event: str, session_type: str, drivers: list[str]) -> dict:
+    _ensure_cache_enabled()
+
+    try:
+        session = fastf1.get_session(year, event, session_type)
+        session.load(laps=True, telemetry=True, weather=False, messages=False)
+        laps = session.laps
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    if laps is None or laps.empty:
+        raise SessionDataUnavailable(
+            f"No lap data found for {event} {year} {session_type}"
+        )
+
+    telemetry_columns = ["Speed", "Distance", "Time", "X", "Y"]
+    driver_entries = []
+    for driver in drivers:
+        fastest = laps.pick_drivers(driver).pick_fastest()
+        if fastest is None:
+            continue
+
+        # ADR 0007: merged car + position data, with the distance channel the
+        # acceleration model differentiates X/Y against.
+        telemetry = fastest.get_telemetry().add_distance()
+        if telemetry.empty:
+            continue
+
+        driver_entries.append({
+            "driver_code": driver,
+            "compound": fastest["Compound"] or "UNKNOWN",
+            "telemetry": [
+                {column: row[column] for column in telemetry_columns}
+                for row in telemetry[telemetry_columns].to_dict("records")
+            ],
+        })
+
+    if not driver_entries:
+        raise SessionDataUnavailable(
+            f"No telemetry found for drivers {drivers} in {event} {year} {session_type}"
+        )
+
+    return {"event_name": session.event["EventName"], "drivers": driver_entries}
+
+
 def load_driver_standings(year: int, event: str | None) -> list[dict]:
     _ensure_cache_enabled()
 

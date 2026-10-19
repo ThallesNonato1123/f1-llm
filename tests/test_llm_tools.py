@@ -500,3 +500,50 @@ def test_speed_quadrant_comes_with_the_chart_when_asked_to_plot():
     )
 
     assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Qualifying (Melhor volta de cada equipe)"
+
+
+def straight_line_telemetry(speed_kmh=200.0, n=10, dt=0.1):
+    speed_ms = speed_kmh / 3.6
+    rows = []
+    for i in range(n):
+        t = i * dt
+        distance = speed_ms * t
+        rows.append({"Speed": speed_kmh, "Distance": distance, "Time": timedelta(seconds=t), "X": distance, "Y": 0.0})
+    return rows
+
+
+def monza_gg_diagram(year, event, session_type, drivers):
+    return {
+        "event_name": "Italian Grand Prix",
+        "drivers": [
+            {"driver_code": driver, "compound": "SOFT", "telemetry": straight_line_telemetry()}
+            for driver in drivers
+        ],
+    }
+
+
+def test_gg_diagram_sends_each_drivers_average_combined_accel_without_a_chart_when_not_asked_to_plot():
+    outcome = run_tool(
+        "get_gg_diagram",
+        {"year": 2024, "event": "Monza", "session_type": "Race", "drivers": ["VER"], "plot": False},
+        loaders=SimpleNamespace(load_gg_diagram=monza_gg_diagram),
+    )
+
+    assert outcome == ToolOutcome(
+        content={
+            "event_name": "Italian Grand Prix",
+            "drivers": [{"driver_code": "VER", "compound": "SOFT", "average_combined_g": 0.0}],
+        },
+        figure=None,
+        is_error=False,
+    )
+
+
+def test_gg_diagram_comes_with_the_chart_when_asked_to_plot():
+    outcome = run_tool(
+        "get_gg_diagram",
+        {"year": 2024, "event": "Monza", "session_type": "Race", "drivers": ["VER"], "plot": True},
+        loaders=SimpleNamespace(load_gg_diagram=monza_gg_diagram),
+    )
+
+    assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Diagrama G-G"

@@ -387,6 +387,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "fastf1" },
     { name = "httpx" },
+    { name = "scipy" },
     { name = "uvicorn" },
 ]
 
@@ -401,6 +402,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.143.2" },
     { name = "fastf1", specifier = ">=3.8.3" },
     { name = "httpx", specifier = ">=0.28.1" },
+    { name = "scipy", specifier = ">=1.14.1" },
     { name = "uvicorn", specifier = ">=0.54.0" },
 ]
 

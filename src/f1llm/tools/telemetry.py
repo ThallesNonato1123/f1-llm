@@ -80,7 +80,7 @@ _CHANNELS = [
 
 # One color per driver, reused across all 4 channels so every line for that
 # driver reads as the same color; cycles if more drivers than colors are compared.
-_DRIVER_COLORS = ["#4C9AFF", "#FF6B6B", "#51CF66", "#FFD43B", "#A78BFA", "#FF922B"]
+DRIVER_COLORS = ["#4C9AFF", "#FF6B6B", "#51CF66", "#FFD43B", "#A78BFA", "#FF922B"]
 
 
 def build_telemetry_chart(samples: list[TelemetrySample]) -> dict:
@@ -91,7 +91,7 @@ def build_telemetry_chart(samples: list[TelemetrySample]) -> dict:
     data = []
     for driver_index, (driver_code, driver_samples) in enumerate(samples_by_driver.items()):
         distances = [sample.distance for sample in driver_samples]
-        color = _DRIVER_COLORS[driver_index % len(_DRIVER_COLORS)]
+        color = DRIVER_COLORS[driver_index % len(DRIVER_COLORS)]
         for channel_index, (attr, yaxis, _title, _domain) in enumerate(_CHANNELS):
             data.append(
                 {

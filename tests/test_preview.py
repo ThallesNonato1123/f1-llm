@@ -234,6 +234,36 @@ def test_builds_speed_quadrant_chart_from_the_requested_teams():
     assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race (Melhor volta de cada equipe)"
 
 
+def test_builds_gg_diagram_chart_from_the_requested_drivers():
+    def straight_line_telemetry(speed_kmh=200.0, n=10, dt=0.1):
+        speed_ms = speed_kmh / 3.6
+        rows = []
+        for i in range(n):
+            t = i * dt
+            distance = speed_ms * t
+            rows.append(
+                {"Speed": speed_kmh, "Distance": distance, "Time": timedelta(seconds=t), "X": distance, "Y": 0.0}
+            )
+        return rows
+
+    def load_gg_diagram(year, event, session_type, drivers):
+        return {
+            "event_name": "Italian Grand Prix",
+            "drivers": [
+                {"driver_code": driver, "compound": "SOFT", "telemetry": straight_line_telemetry()}
+                for driver in drivers
+            ],
+        }
+
+    result = build_preview(
+        request("gg_diagram", ["VER", "HAM"]),
+        loaders=SimpleNamespace(load_gg_diagram=load_gg_diagram),
+    )
+
+    assert result.found is True
+    assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Diagrama G-G"
+
+
 def test_reports_not_found_with_the_tools_reason_when_session_has_no_data():
     def load_laps(year, event, session_type, drivers):
         raise SessionDataUnavailable("No data for Monza 2024 Race")

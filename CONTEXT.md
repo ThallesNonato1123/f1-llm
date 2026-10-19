@@ -28,6 +28,22 @@ _Avoid_: Top speed.
 A distância total de uma Volta dividida pelo seu tempo total — a velocidade real da volta inteira, não um valor instantâneo. Diferente da Velocidade máxima, que é o pico de um único instante.
 _Avoid_: Mean speed, velocidade média das amostras.
 
+**Aceleração lateral**:
+A aceleração do carro perpendicular à direção do movimento, gerada ao fazer uma curva. Medida em g (1g = 9,81 m/s²); maior magnitude indica uma curva feita com mais força, exigindo mais aderência do pneu.
+_Avoid_: Lateral acceleration, força g lateral.
+
+**Aceleração longitudinal**:
+A aceleração do carro na direção do movimento. Positiva sob tração (acelerando), negativa sob frenagem. Medida em g.
+_Avoid_: Longitudinal acceleration.
+
+**Aceleração combinada**:
+A magnitude do vetor que soma a Aceleração lateral e a Aceleração longitudinal num mesmo instante — quantifica o quanto o carro está sendo exigido (por exemplo, freando e curvando ao mesmo tempo), independente da direção.
+_Avoid_: Combined acceleration, aceleração total.
+
+**Envelope de aceleração**:
+O contorno mais externo dos pontos de Aceleração lateral × Aceleração longitudinal de um Piloto ao longo de uma Volta — representa o limite de desempenho que o carro atingiu naquela volta. Pontos mais distantes do centro indicam mais aderência.
+_Avoid_: Envelope (sozinho), performance envelope.
+
 **Parada nos boxes**:
 O Piloto entra no pit lane e, geralmente, troca o Composto de pneu antes de voltar à pista; encerra um Stint e inicia o próximo. Nos gráficos, é marcada pela primeira Volta do novo Stint — a volta em que o Piloto volta à pista.
 _Avoid_: Pit stop, pitstop, box (como termo de glossário).

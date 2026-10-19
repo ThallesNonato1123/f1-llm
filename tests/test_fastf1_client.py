@@ -5,6 +5,7 @@ import pytest
 from f1llm.errors import SessionDataUnavailable
 from f1llm.fastf1_client import (
     load_driver_standings,
+    load_gg_diagram,
     load_laps,
     load_race_pace_data,
     load_results,
@@ -15,6 +16,7 @@ from f1llm.fastf1_client import (
     load_top_speeds,
     load_tyre_degradation,
 )
+from f1llm.tools.gg_diagram import get_gg_diagram
 
 
 @pytest.mark.integration
@@ -192,6 +194,31 @@ def test_loads_speed_quadrant_data_with_team_mean_and_top_speed():
 def test_rejects_speed_quadrant_data_when_fastf1_fails_to_load_laps_without_raising():
     with pytest.raises(SessionDataUnavailable):
         load_speed_quadrant(2025, "Monza", "Race")
+
+
+@pytest.mark.integration
+def test_loads_gg_diagram_telemetry_with_plausible_accelerations():
+    result = get_gg_diagram(
+        year=2021,
+        event="Abu Dhabi",
+        session_type="Race",
+        drivers=["VER"],
+        load_gg_diagram=load_gg_diagram,
+    )
+
+    assert result.found is True
+    [driver] = result.drivers
+    assert driver.compound in {"SOFT", "MEDIUM", "HARD", "INTERMEDIATE", "WET"}
+    # A real lap combines braking, cornering and traction; a unit mismatch
+    # between X/Y and Distance would blow this far past 7.5g or collapse it
+    # near 0, so this is also a sanity check on the FastF1 boundary itself.
+    assert 0.3 < driver.average_combined_g < 7.5
+
+
+@pytest.mark.integration
+def test_rejects_gg_diagram_data_when_fastf1_fails_to_load_laps_without_raising():
+    with pytest.raises(SessionDataUnavailable):
+        load_gg_diagram(2025, "Monza", "Race", ["VER"])
 
 
 @pytest.mark.integration
