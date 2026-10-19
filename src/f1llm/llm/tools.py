@@ -15,7 +15,14 @@ from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
 from f1llm.tools.top_speeds import build_top_speeds_chart, get_top_speeds
 from f1llm.tools.gap_to_pole import build_gap_to_pole_chart, get_gap_to_pole
+from f1llm.tools.best_sectors import build_best_sectors_chart, get_best_sectors
 from f1llm.tools.gg_diagram import build_gg_diagram_chart, get_gg_diagram
+from f1llm.tools.position_changes import build_position_changes_chart, get_position_changes
+from f1llm.tools.qualifying_segments import (
+    build_qualifying_pace_evolution_chart,
+    build_qualifying_segment_bar_chart,
+    get_qualifying_segments,
+)
 from f1llm.tools.speed_delta_trace import build_speed_delta_trace_chart, get_speed_delta_trace
 from f1llm.tools.speed_quadrant import build_speed_quadrant_chart, get_speed_quadrant
 from f1llm.tools.tyre_degradation import build_tyre_degradation_chart, get_tyre_degradation
@@ -394,6 +401,68 @@ def _gap_to_pole(tool_input, loaders):
     return result, summarize, chart
 
 
+def _position_changes(tool_input, loaders):
+    result = get_position_changes(
+        **_session(tool_input),
+        drivers=tool_input.get("drivers") or None,
+        load_position_changes=loaders.load_position_changes,
+    )
+
+    def summarize():
+        return {
+            "event_name": result.event_name,
+            "drivers": [
+                {
+                    "driver_code": driver.driver_code,
+                    "positions": [{"lap": point.lap_number, "position": point.position} for point in driver.points],
+                }
+                for driver in result.drivers
+            ],
+        }
+
+    def chart():
+        return build_position_changes_chart(
+            result, year=tool_input["year"], session_type=tool_input["session_type"]
+        )
+
+    return result, summarize, chart
+
+
+def _best_sectors(tool_input, loaders):
+    result = get_best_sectors(**_session(tool_input), load_best_sectors=loaders.load_best_sectors)
+
+    def summarize():
+        return {
+            "event_name": result.event_name,
+            "drivers": [asdict(driver) for driver in result.drivers],
+        }
+
+    def chart():
+        return build_best_sectors_chart(result, year=tool_input["year"], session_type=tool_input["session_type"])
+
+    return result, summarize, chart
+
+
+def _qualifying_segments(tool_input, loaders):
+    result = get_qualifying_segments(
+        year=tool_input["year"],
+        event=tool_input["event"],
+        load_qualifying_segments=loaders.load_qualifying_segments,
+    )
+
+    def summarize():
+        return {"event_name": result.event_name, "teams": [asdict(team) for team in result.teams]}
+
+    def chart():
+        if tool_input.get("chart_type") == "evolution":
+            return build_qualifying_pace_evolution_chart(result, year=tool_input["year"])
+        return build_qualifying_segment_bar_chart(
+            result, year=tool_input["year"], segment=tool_input.get("segment") or "Q3"
+        )
+
+    return result, summarize, chart
+
+
 _HANDLERS = {
     "get_telemetry_comparison": _telemetry,
     "get_race_pace": _race_pace,
@@ -409,6 +478,9 @@ _HANDLERS = {
     "get_gg_diagram": _gg_diagram,
     "get_speed_delta_trace": _speed_delta_trace,
     "get_gap_to_pole": _gap_to_pole,
+    "get_position_changes": _position_changes,
+    "get_best_sectors": _best_sectors,
+    "get_qualifying_segments": _qualifying_segments,
 }
 
 
@@ -604,5 +676,40 @@ TOOL_DEFINITIONS = [
         "Omit drivers for the whole field.",
         {**_session_properties(["Race", "Qualifying", "Sprint"]), "drivers": _DRIVERS, "plot": _PLOT},
         ["year", "event", "session_type", "plot"],
+    ),
+    _tool(
+        "get_position_changes",
+        "Each driver's race position lap by lap, to see overtakes and position changes through the race. "
+        "Omit drivers for the whole field.",
+        {**_session_properties(["Race", "Sprint"]), "drivers": _DRIVERS, "plot": _PLOT},
+        ["year", "event", "session_type", "plot"],
+    ),
+    _tool(
+        "get_best_sectors",
+        "Each driver's best Sector 1/2/3 time in the session (each sector's best may come from a "
+        "different lap). The chart shows the 8 fastest drivers per sector.",
+        {**_session_properties(["Race", "Qualifying", "Sprint"]), "plot": _PLOT},
+        ["year", "event", "session_type", "plot"],
+    ),
+    _tool(
+        "get_qualifying_segments",
+        "Each team's best lap time in Q1, Q2 and Q3 (null for a segment a team didn't reach). "
+        "chart_type 'bar' (default) shows the gap to the fastest in one segment; 'evolution' shows each "
+        "team's time across the segments it reached.",
+        {
+            "year": {"type": "integer", "description": "Season year, 2018 or later."},
+            "event": {
+                "type": "string",
+                "description": 'Grand Prix name, country or circuit in English, e.g. "Monza", "Brazil".',
+            },
+            "chart_type": {"type": "string", "enum": ["bar", "evolution"]},
+            "segment": {
+                "type": "string",
+                "enum": ["Q1", "Q2", "Q3"],
+                "description": "Which segment to plot when chart_type is 'bar'. Defaults to Q3.",
+            },
+            "plot": _PLOT,
+        },
+        ["year", "event", "plot"],
     ),
 ]

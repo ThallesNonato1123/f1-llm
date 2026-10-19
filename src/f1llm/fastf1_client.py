@@ -497,6 +497,132 @@ def load_gap_to_pole(year: int, event: str, session_type: str, drivers: list[str
     return {"event_name": session.event["EventName"], "drivers": rows}
 
 
+def load_position_changes(year: int, event: str, session_type: str, drivers: list[str] | None) -> dict:
+    _ensure_cache_enabled()
+
+    try:
+        session = fastf1.get_session(year, event, session_type)
+        session.load(laps=True, telemetry=False, weather=False, messages=False)
+        laps = session.laps
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    if laps is None or laps.empty:
+        raise SessionDataUnavailable(
+            f"No lap data found for {event} {year} {session_type}"
+        )
+
+    if drivers is not None:
+        laps = laps[laps["Driver"].isin(drivers)]
+        if laps.empty:
+            raise SessionDataUnavailable(
+                f"No lap data found for drivers {drivers} in {event} {year} {session_type}"
+            )
+
+    team_colors = {
+        row["Abbreviation"]: row["TeamColor"]
+        for row in session.results[["Abbreviation", "TeamColor"]].to_dict("records")
+    }
+
+    rows = [
+        {
+            "Driver": row["Driver"],
+            "TeamColor": team_colors.get(row["Driver"]),
+            "LapNumber": row["LapNumber"],
+            "Position": row["Position"],
+        }
+        for row in laps[["Driver", "LapNumber", "Position"]].to_dict("records")
+        if not pd.isna(row["Position"])
+    ]
+
+    return {"event_name": session.event["EventName"], "laps": rows}
+
+
+def load_best_sectors(year: int, event: str, session_type: str) -> dict:
+    _ensure_cache_enabled()
+
+    try:
+        session = fastf1.get_session(year, event, session_type)
+        session.load(laps=True, telemetry=False, weather=False, messages=False)
+        laps = session.laps
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    if laps is None or laps.empty:
+        raise SessionDataUnavailable(
+            f"No lap data found for {event} {year} {session_type}"
+        )
+
+    team_colors = {
+        row["Abbreviation"]: row["TeamColor"]
+        for row in session.results[["Abbreviation", "TeamColor"]].to_dict("records")
+    }
+
+    sector_columns = ["Driver", "Sector1Time", "Sector2Time", "Sector3Time"]
+    rows = [
+        {
+            "driver_code": row["Driver"],
+            "team_color": team_colors.get(row["Driver"]),
+            "sector_1": None if pd.isna(row["Sector1Time"]) else row["Sector1Time"],
+            "sector_2": None if pd.isna(row["Sector2Time"]) else row["Sector2Time"],
+            "sector_3": None if pd.isna(row["Sector3Time"]) else row["Sector3Time"],
+        }
+        for row in laps[sector_columns].to_dict("records")
+    ]
+
+    return {"event_name": session.event["EventName"], "laps": rows}
+
+
+def load_qualifying_segments(year: int, event: str) -> dict:
+    _ensure_cache_enabled()
+
+    try:
+        session = fastf1.get_session(year, event, "Qualifying")
+        session.load(laps=True, telemetry=False, weather=False, messages=False)
+        laps = session.laps
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    if laps is None or laps.empty:
+        raise SessionDataUnavailable(
+            f"No lap data found for {event} {year} Qualifying"
+        )
+
+    team_colors = {
+        row["Abbreviation"]: row["TeamColor"]
+        for row in session.results[["Abbreviation", "TeamColor"]].to_dict("records")
+    }
+    driver_teams = {row["Driver"]: row["Team"] for row in laps[["Driver", "Team"]].to_dict("records")}
+    team_color_by_team = {
+        team: team_colors.get(driver)
+        for driver, team in driver_teams.items()
+        if team_colors.get(driver)
+    }
+
+    segments = laps.split_qualifying_sessions()
+    best_by_team_segment: dict[str, list] = {}
+    for index, segment_laps in enumerate(segments):
+        if segment_laps is None or segment_laps.empty:
+            continue
+        for team, lap_time in segment_laps.groupby("Team")["LapTime"].min().items():
+            if pd.isna(lap_time):
+                continue
+            best_by_team_segment.setdefault(team, [None, None, None])[index] = lap_time
+
+    teams = [
+        {
+            "team": team,
+            "team_color": team_color_by_team.get(team),
+            "q1": times[0],
+            "q2": times[1],
+            "q3": times[2],
+        }
+        for team, times in best_by_team_segment.items()
+    ]
+
+    return {"event_name": session.event["EventName"], "teams": teams}
+
+
 def load_driver_standings(year: int, event: str | None) -> list[dict]:
     _ensure_cache_enabled()
 

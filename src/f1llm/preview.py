@@ -12,7 +12,14 @@ from f1llm.tools.race_pace import build_race_pace_chart, get_race_pace
 from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
 from f1llm.tools.gap_to_pole import build_gap_to_pole_chart, get_gap_to_pole
+from f1llm.tools.best_sectors import build_best_sectors_chart, get_best_sectors
 from f1llm.tools.gg_diagram import build_gg_diagram_chart, get_gg_diagram
+from f1llm.tools.position_changes import build_position_changes_chart, get_position_changes
+from f1llm.tools.qualifying_segments import (
+    build_qualifying_pace_evolution_chart,
+    build_qualifying_segment_bar_chart,
+    get_qualifying_segments,
+)
 from f1llm.tools.speed_delta_trace import build_speed_delta_trace_chart, get_speed_delta_trace
 from f1llm.tools.speed_quadrant import build_speed_quadrant_chart, get_speed_quadrant
 from f1llm.tools.top_speeds import build_top_speeds_chart, get_top_speeds
@@ -21,6 +28,7 @@ from f1llm.tools.tyre_degradation import build_tyre_degradation_chart, get_tyre_
 CHARTS = (
     "lap_times", "telemetry", "stints", "race_pace", "gap_to_winner", "top_speeds", "tyre_degradation",
     "speed_quadrant", "gg_diagram", "speed_delta_trace", "gap_to_pole", "lap_times_by_compound",
+    "position_changes", "best_sectors", "qualifying_segments_bar", "qualifying_segments_evolution",
 )
 
 
@@ -109,6 +117,25 @@ def build_preview(request: PreviewRequest, *, loaders) -> PreviewResult:
     elif request.chart == "gap_to_pole":
         result = get_gap_to_pole(**all_by_default, load_gap_to_pole=loaders.load_gap_to_pole)
         build = lambda: build_gap_to_pole_chart(result, **titled)
+    elif request.chart == "position_changes":
+        result = get_position_changes(**all_by_default, load_position_changes=loaders.load_position_changes)
+        build = lambda: build_position_changes_chart(result, **titled)
+    elif request.chart == "best_sectors":
+        result = get_best_sectors(
+            year=request.year, event=request.event, session_type=request.session_type,
+            load_best_sectors=loaders.load_best_sectors,
+        )
+        build = lambda: build_best_sectors_chart(result, **titled)
+    elif request.chart == "qualifying_segments_bar":
+        result = get_qualifying_segments(
+            year=request.year, event=request.event, load_qualifying_segments=loaders.load_qualifying_segments,
+        )
+        build = lambda: build_qualifying_segment_bar_chart(result, year=request.year, segment="Q3")
+    elif request.chart == "qualifying_segments_evolution":
+        result = get_qualifying_segments(
+            year=request.year, event=request.event, load_qualifying_segments=loaders.load_qualifying_segments,
+        )
+        build = lambda: build_qualifying_pace_evolution_chart(result, year=request.year)
     else:
         result = get_race_pace(**all_by_default, load_race_pace_data=loaders.load_race_pace_data)
         build = lambda: build_race_pace_chart(result, **titled)

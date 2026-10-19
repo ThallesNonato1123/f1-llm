@@ -311,6 +311,58 @@ def test_builds_gap_to_pole_chart_for_every_driver_when_none_are_requested():
     assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Gap para a pole"
 
 
+def test_builds_position_changes_chart_for_every_driver_when_none_are_requested():
+    def load_position_changes(year, event, session_type, drivers):
+        return {
+            "event_name": "Italian Grand Prix",
+            "laps": [{"Driver": "VER", "TeamColor": "0600EF", "LapNumber": 1, "Position": 1}],
+        }
+
+    result = build_preview(
+        request("position_changes"), loaders=SimpleNamespace(load_position_changes=load_position_changes)
+    )
+
+    assert result.found is True
+    assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Posição por volta"
+
+
+def test_builds_best_sectors_chart():
+    def load_best_sectors(year, event, session_type):
+        return {
+            "event_name": "Italian Grand Prix",
+            "laps": [
+                {"driver_code": "VER", "team_color": "0600EF", "sector_1": timedelta(seconds=28.0),
+                 "sector_2": timedelta(seconds=35.0), "sector_3": timedelta(seconds=27.0)},
+            ],
+        }
+
+    result = build_preview(
+        request("best_sectors"), loaders=SimpleNamespace(load_best_sectors=load_best_sectors)
+    )
+
+    assert result.found is True
+    assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Melhores setores"
+
+
+def test_builds_qualifying_segments_bar_chart():
+    def load_qualifying_segments(year, event):
+        return {
+            "event_name": "Italian Grand Prix",
+            "teams": [
+                {"team": "Ferrari", "team_color": "E8002D", "q1": timedelta(seconds=80.0),
+                 "q2": timedelta(seconds=79.5), "q3": timedelta(seconds=79.0)},
+            ],
+        }
+
+    result = build_preview(
+        request("qualifying_segments_bar"),
+        loaders=SimpleNamespace(load_qualifying_segments=load_qualifying_segments),
+    )
+
+    assert result.found is True
+    assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Q3"
+
+
 def test_reports_not_found_with_the_tools_reason_when_session_has_no_data():
     def load_laps(year, event, session_type, drivers):
         raise SessionDataUnavailable("No data for Monza 2024 Race")

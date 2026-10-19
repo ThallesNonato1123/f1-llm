@@ -16,6 +16,14 @@ _Avoid_: GP (como termo de glossário), evento, corrida (quando usado para o fim
 Um circuito completo da pista por um carro; a unidade básica de cronometragem dentro de uma Sessão.
 _Avoid_: Giro.
 
+**Tempo de setor**:
+O tempo de um dos três trechos fixos em que o circuito é dividido (Setor 1, 2 e 3), cronometrados independentemente dentro de uma Volta. O melhor Tempo de setor de um Piloto na Sessão pode vir de Voltas diferentes para cada setor.
+_Avoid_: Sector time, S1/S2/S3 (como termo de glossário).
+
+**Segmento de Qualifying**:
+Uma das três fases eliminatórias de uma Sessão de Classificação (Q1, Q2, Q3) — cada uma elimina um grupo de Pilotos, do mais lento ao mais rápido, até sobrar o grupo que disputa a pole.
+_Avoid_: Qualifying segment, fase de qualifying.
+
 **Telemetria**:
 Dados contínuos do carro capturados ao longo de uma Volta (velocidade, marcha, acelerador, freio).
 _Avoid_: Dados do carro.

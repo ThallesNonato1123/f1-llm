@@ -5,8 +5,11 @@ import pytest
 from f1llm.errors import SessionDataUnavailable
 from f1llm.fastf1_client import (
     load_driver_standings,
+    load_best_sectors,
     load_gap_to_pole,
     load_gg_diagram,
+    load_position_changes,
+    load_qualifying_segments,
     load_laps,
     load_race_pace_data,
     load_results,
@@ -267,6 +270,69 @@ def test_loads_gap_to_pole_with_the_winner_at_zero():
 def test_rejects_gap_to_pole_when_fastf1_fails_to_load_laps_without_raising():
     with pytest.raises(SessionDataUnavailable):
         load_gap_to_pole(2025, "Monza", "Race", None)
+
+
+@pytest.mark.integration
+def test_loads_position_changes_for_every_lap_with_the_winner_at_p1():
+    data = load_position_changes(2021, "Abu Dhabi", "Race", None)
+
+    assert data["event_name"] == "Abu Dhabi Grand Prix"
+    drivers_present = {row["Driver"] for row in data["laps"]}
+    assert len(drivers_present) == 19  # MAZ did not start
+
+    last_lap = max(row["LapNumber"] for row in data["laps"])
+    winner_last_lap = [
+        row for row in data["laps"] if row["LapNumber"] == last_lap and row["Position"] == 1
+    ]
+    assert winner_last_lap[0]["Driver"] == "VER"
+    assert len(winner_last_lap[0]["TeamColor"]) == 6  # bare hex digits, e.g. "0600EF"
+
+
+@pytest.mark.integration
+def test_rejects_position_changes_when_fastf1_fails_to_load_laps_without_raising():
+    with pytest.raises(SessionDataUnavailable):
+        load_position_changes(2025, "Monza", "Race", None)
+
+
+@pytest.mark.integration
+def test_loads_best_sectors_with_plausible_times_and_team_colors():
+    data = load_best_sectors(2021, "Abu Dhabi", "Race")
+
+    assert data["event_name"] == "Abu Dhabi Grand Prix"
+    assert len(data["laps"]) > 0
+
+    ver_rows = [row for row in data["laps"] if row["driver_code"] == "VER"]
+    assert len(ver_rows) > 0
+    assert len(ver_rows[0]["team_color"]) == 6  # bare hex digits, e.g. "0600EF"
+    sector_1_times = [row["sector_1"] for row in ver_rows if row["sector_1"] is not None]
+    assert all(t.total_seconds() > 0 for t in sector_1_times)
+
+
+@pytest.mark.integration
+def test_rejects_best_sectors_when_fastf1_fails_to_load_laps_without_raising():
+    with pytest.raises(SessionDataUnavailable):
+        load_best_sectors(2025, "Monza", "Race")
+
+
+@pytest.mark.integration
+def test_loads_qualifying_segments_with_fewer_teams_timed_in_later_segments():
+    data = load_qualifying_segments(2021, "Abu Dhabi")
+
+    assert data["event_name"] == "Abu Dhabi Grand Prix"
+    by_team = {row["team"]: row for row in data["teams"]}
+
+    assert all(row["q1"] is not None for row in data["teams"])
+    q3_teams = [team for team, row in by_team.items() if row["q3"] is not None]
+    assert 0 < len(q3_teams) <= 10  # only the Q3 top 10 get a time there
+    assert len(q3_teams) < len(data["teams"])  # strictly fewer than every team
+
+    assert len(by_team["Red Bull Racing"]["team_color"]) == 6  # bare hex digits, e.g. "0600EF"
+
+
+@pytest.mark.integration
+def test_rejects_qualifying_segments_when_fastf1_fails_to_load_laps_without_raising():
+    with pytest.raises(SessionDataUnavailable):
+        load_qualifying_segments(2025, "Monza")
 
 
 @pytest.mark.integration

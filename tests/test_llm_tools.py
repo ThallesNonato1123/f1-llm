@@ -646,3 +646,135 @@ def test_gap_to_pole_comes_with_the_chart_when_asked_to_plot():
     )
 
     assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Qualifying - Gap para a pole"
+
+
+def monza_position_changes(year, event, session_type, drivers):
+    return {
+        "event_name": "Italian Grand Prix",
+        "laps": [
+            {"Driver": "VER", "TeamColor": "0600EF", "LapNumber": 1, "Position": 2},
+            {"Driver": "VER", "TeamColor": "0600EF", "LapNumber": 2, "Position": 1},
+        ],
+    }
+
+
+def test_position_changes_sends_each_drivers_lap_by_lap_position_without_a_chart_when_not_asked_to_plot():
+    outcome = run_tool(
+        "get_position_changes",
+        {"year": 2024, "event": "Monza", "session_type": "Race", "plot": False},
+        loaders=SimpleNamespace(load_position_changes=monza_position_changes),
+    )
+
+    assert outcome == ToolOutcome(
+        content={
+            "event_name": "Italian Grand Prix",
+            "drivers": [
+                {"driver_code": "VER", "positions": [{"lap": 1, "position": 2}, {"lap": 2, "position": 1}]},
+            ],
+        },
+        figure=None,
+        is_error=False,
+    )
+
+
+def test_position_changes_comes_with_the_chart_when_asked_to_plot():
+    outcome = run_tool(
+        "get_position_changes",
+        {"year": 2024, "event": "Monza", "session_type": "Race", "plot": True},
+        loaders=SimpleNamespace(load_position_changes=monza_position_changes),
+    )
+
+    assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Posição por volta"
+
+
+def monza_best_sectors(year, event, session_type):
+    return {
+        "event_name": "Italian Grand Prix",
+        "laps": [
+            {"driver_code": "VER", "team_color": "0600EF", "sector_1": timedelta(seconds=28.0),
+             "sector_2": timedelta(seconds=35.0), "sector_3": timedelta(seconds=27.0)},
+        ],
+    }
+
+
+def test_best_sectors_sends_each_drivers_best_sector_times_without_a_chart_when_not_asked_to_plot():
+    outcome = run_tool(
+        "get_best_sectors",
+        {"year": 2024, "event": "Monza", "session_type": "Qualifying", "plot": False},
+        loaders=SimpleNamespace(load_best_sectors=monza_best_sectors),
+    )
+
+    assert outcome == ToolOutcome(
+        content={
+            "event_name": "Italian Grand Prix",
+            "drivers": [
+                {"driver_code": "VER", "team_color": "#0600EF", "sector_1": 28.0, "sector_2": 35.0,
+                 "sector_3": 27.0},
+            ],
+        },
+        figure=None,
+        is_error=False,
+    )
+
+
+def test_best_sectors_comes_with_the_chart_when_asked_to_plot():
+    outcome = run_tool(
+        "get_best_sectors",
+        {"year": 2024, "event": "Monza", "session_type": "Qualifying", "plot": True},
+        loaders=SimpleNamespace(load_best_sectors=monza_best_sectors),
+    )
+
+    assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Qualifying - Melhores setores"
+
+
+def monza_qualifying_segments(year, event):
+    return {
+        "event_name": "Italian Grand Prix",
+        "teams": [
+            {"team": "Ferrari", "team_color": "E8002D", "q1": timedelta(seconds=80.0),
+             "q2": timedelta(seconds=79.5), "q3": timedelta(seconds=79.0)},
+            {"team": "Haas", "team_color": "B6BABD", "q1": timedelta(seconds=81.0), "q2": None, "q3": None},
+        ],
+    }
+
+
+def test_qualifying_segments_sends_each_teams_times_without_a_chart_when_not_asked_to_plot():
+    outcome = run_tool(
+        "get_qualifying_segments",
+        {"year": 2024, "event": "Monza", "plot": False},
+        loaders=SimpleNamespace(load_qualifying_segments=monza_qualifying_segments),
+    )
+
+    assert outcome == ToolOutcome(
+        content={
+            "event_name": "Italian Grand Prix",
+            "teams": [
+                {"team": "Ferrari", "team_color": "#E8002D", "q1_seconds": 80.0, "q2_seconds": 79.5,
+                 "q3_seconds": 79.0},
+                {"team": "Haas", "team_color": "#B6BABD", "q1_seconds": 81.0, "q2_seconds": None,
+                 "q3_seconds": None},
+            ],
+        },
+        figure=None,
+        is_error=False,
+    )
+
+
+def test_qualifying_segments_default_chart_is_the_q3_bar():
+    outcome = run_tool(
+        "get_qualifying_segments",
+        {"year": 2024, "event": "Monza", "plot": True},
+        loaders=SimpleNamespace(load_qualifying_segments=monza_qualifying_segments),
+    )
+
+    assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Q3"
+
+
+def test_qualifying_segments_evolution_chart_when_requested():
+    outcome = run_tool(
+        "get_qualifying_segments",
+        {"year": 2024, "event": "Monza", "chart_type": "evolution", "plot": True},
+        loaders=SimpleNamespace(load_qualifying_segments=monza_qualifying_segments),
+    )
+
+    assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Evolução do ritmo na Qualifying"
