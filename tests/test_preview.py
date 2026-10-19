@@ -50,8 +50,8 @@ def test_builds_lap_times_chart_from_the_requested_session():
     def load_laps(year, event, session_type, drivers):
         calls.append((year, event, session_type, drivers))
         return [
-            {"Driver": "LEC", "LapNumber": 1.0, "LapTime": timedelta(seconds=85.5)},
-            {"Driver": "LEC", "LapNumber": 2.0, "LapTime": timedelta(seconds=84.0)},
+            {"Driver": "LEC", "LapNumber": 1.0, "LapTime": timedelta(seconds=85.5), "Compound": "SOFT"},
+            {"Driver": "LEC", "LapNumber": 2.0, "LapTime": timedelta(seconds=84.0), "Compound": "SOFT"},
         ]
 
     result = build_preview(request("lap_times", ["LEC"]), loaders=SimpleNamespace(load_laps=load_laps))
@@ -62,6 +62,19 @@ def test_builds_lap_times_chart_from_the_requested_session():
     assert trace["name"] == "LEC"
     assert trace["x"] == [1, 2]
     assert trace["y"] == [85.5, 84.0]
+
+
+def test_builds_lap_times_by_compound_chart():
+    def load_laps(year, event, session_type, drivers):
+        return [{"Driver": "LEC", "LapNumber": 1.0, "LapTime": timedelta(seconds=85.5), "Compound": "SOFT"}]
+
+    result = build_preview(
+        request("lap_times_by_compound", ["LEC"]), loaders=SimpleNamespace(load_laps=load_laps)
+    )
+
+    assert result.found is True
+    [trace] = result.figure["data"]
+    assert trace["name"] == "Macio"
 
 
 def test_builds_telemetry_chart_from_each_drivers_fastest_lap():
@@ -283,6 +296,19 @@ def test_builds_speed_delta_trace_chart_from_the_requested_drivers():
 
     assert result.found is True
     assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Traço de velocidade com delta"
+
+
+def test_builds_gap_to_pole_chart_for_every_driver_when_none_are_requested():
+    def load_gap_to_pole(year, event, session_type, drivers):
+        return {
+            "event_name": "Italian Grand Prix",
+            "drivers": [{"driver_code": "VER", "team_color": "0600EF", "lap_time": timedelta(seconds=90.0)}],
+        }
+
+    result = build_preview(request("gap_to_pole"), loaders=SimpleNamespace(load_gap_to_pole=load_gap_to_pole))
+
+    assert result.found is True
+    assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Gap para a pole"
 
 
 def test_reports_not_found_with_the_tools_reason_when_session_has_no_data():

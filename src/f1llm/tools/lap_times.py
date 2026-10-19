@@ -3,6 +3,7 @@ from datetime import date
 
 from f1llm.charts import dark_layout
 from f1llm.errors import SessionDataUnavailable
+from f1llm.tools.stints import COMPOUND_COLORS, COMPOUND_NAMES_PT, UNKNOWN_COMPOUND_COLOR
 
 SUPPORTED_SESSION_TYPES = {"Race", "Qualifying", "Sprint"}
 MIN_SUPPORTED_YEAR = 2018
@@ -14,6 +15,7 @@ class LapTime:
     driver_code: str
     seconds: float | None
     formatted: str | None
+    compound: str | None = None
 
 
 @dataclass(frozen=True)
@@ -58,6 +60,7 @@ def get_lap_times(
             driver_code=row["Driver"],
             seconds=row["LapTime"].total_seconds() if row["LapTime"] is not None else None,
             formatted=str(row["LapTime"]) if row["LapTime"] is not None else None,
+            compound=row["Compound"],
         )
         for row in raw_rows
     ]
@@ -81,6 +84,34 @@ def build_lap_times_chart(laps: list[LapTime]) -> dict:
                 "y": [lap.seconds for lap in driver_laps],
             }
             for driver_code, driver_laps in laps_by_driver.items()
+        ],
+        "layout": dark_layout(
+            {
+                "xaxis": {"title": "Volta", "showgrid": True},
+                "yaxis": {"title": "Tempo de volta (s)", "showgrid": True},
+            }
+        ),
+    }
+
+
+def build_lap_times_by_compound_chart(laps: list[LapTime]) -> dict:
+    laps_by_compound: dict[str, list[LapTime]] = {}
+    for lap in laps:
+        if lap.seconds is None:
+            continue
+        laps_by_compound.setdefault(lap.compound or "UNKNOWN", []).append(lap)
+
+    return {
+        "data": [
+            {
+                "type": "scatter",
+                "mode": "markers",
+                "name": COMPOUND_NAMES_PT.get(compound, "Desconhecido"),
+                "x": [lap.lap_number for lap in compound_laps],
+                "y": [lap.seconds for lap in compound_laps],
+                "marker": {"color": COMPOUND_COLORS.get(compound, UNKNOWN_COMPOUND_COLOR)},
+            }
+            for compound, compound_laps in laps_by_compound.items()
         ],
         "layout": dark_layout(
             {

@@ -5,6 +5,7 @@ import pytest
 from f1llm.errors import SessionDataUnavailable
 from f1llm.fastf1_client import (
     load_driver_standings,
+    load_gap_to_pole,
     load_gg_diagram,
     load_laps,
     load_race_pace_data,
@@ -46,6 +47,8 @@ def test_loads_laps_for_the_requested_drivers_only():
 
     ver_lap_numbers = sorted(row["LapNumber"] for row in rows if row["Driver"] == "VER")
     assert ver_lap_numbers[0] == 1.0
+
+    assert any(row["Compound"] is not None for row in rows)
 
 
 @pytest.mark.integration
@@ -245,6 +248,25 @@ def test_loads_speed_delta_trace_with_matching_distance_axes_and_corners():
 def test_rejects_speed_delta_trace_when_fastf1_fails_to_load_laps_without_raising():
     with pytest.raises(SessionDataUnavailable):
         load_speed_delta_trace(2025, "Monza", "Race", ["VER", "HAM"], None)
+
+
+@pytest.mark.integration
+def test_loads_gap_to_pole_with_the_winner_at_zero():
+    data = load_gap_to_pole(2021, "Abu Dhabi", "Race", None)
+
+    assert data["event_name"] == "Abu Dhabi Grand Prix"
+    assert len(data["drivers"]) == 19  # MAZ did not start
+
+    by_driver = {row["driver_code"]: row for row in data["drivers"]}
+    assert len(by_driver["VER"]["team_color"]) == 6  # bare hex digits, e.g. "0600EF"
+    fastest = min(row["lap_time"] for row in data["drivers"])
+    assert fastest.total_seconds() > 80  # a plausible Abu Dhabi lap time
+
+
+@pytest.mark.integration
+def test_rejects_gap_to_pole_when_fastf1_fails_to_load_laps_without_raising():
+    with pytest.raises(SessionDataUnavailable):
+        load_gap_to_pole(2025, "Monza", "Race", None)
 
 
 @pytest.mark.integration

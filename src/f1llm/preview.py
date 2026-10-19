@@ -7,10 +7,11 @@ import webbrowser
 from dataclasses import dataclass
 
 from f1llm.tools.gap_to_winner import build_gap_to_winner_chart, get_gap_to_winner
-from f1llm.tools.lap_times import build_lap_times_chart, get_lap_times
+from f1llm.tools.lap_times import build_lap_times_by_compound_chart, build_lap_times_chart, get_lap_times
 from f1llm.tools.race_pace import build_race_pace_chart, get_race_pace
 from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
+from f1llm.tools.gap_to_pole import build_gap_to_pole_chart, get_gap_to_pole
 from f1llm.tools.gg_diagram import build_gg_diagram_chart, get_gg_diagram
 from f1llm.tools.speed_delta_trace import build_speed_delta_trace_chart, get_speed_delta_trace
 from f1llm.tools.speed_quadrant import build_speed_quadrant_chart, get_speed_quadrant
@@ -19,7 +20,7 @@ from f1llm.tools.tyre_degradation import build_tyre_degradation_chart, get_tyre_
 
 CHARTS = (
     "lap_times", "telemetry", "stints", "race_pace", "gap_to_winner", "top_speeds", "tyre_degradation",
-    "speed_quadrant", "gg_diagram", "speed_delta_trace",
+    "speed_quadrant", "gg_diagram", "speed_delta_trace", "gap_to_pole", "lap_times_by_compound",
 )
 
 
@@ -70,6 +71,9 @@ def build_preview(request: PreviewRequest, *, loaders) -> PreviewResult:
     if request.chart == "lap_times":
         result = get_lap_times(**common, load_laps=loaders.load_laps)
         build = lambda: build_lap_times_chart(result.laps)
+    elif request.chart == "lap_times_by_compound":
+        result = get_lap_times(**common, load_laps=loaders.load_laps)
+        build = lambda: build_lap_times_by_compound_chart(result.laps)
     elif request.chart == "telemetry":
         result = get_telemetry_comparison(**common, load_telemetry=loaders.load_telemetry)
         build = lambda: build_telemetry_chart(result.samples)
@@ -102,6 +106,9 @@ def build_preview(request: PreviewRequest, *, loaders) -> PreviewResult:
     elif request.chart == "speed_delta_trace":
         result = get_speed_delta_trace(**common, load_speed_delta_trace=loaders.load_speed_delta_trace)
         build = lambda: build_speed_delta_trace_chart(result, **titled)
+    elif request.chart == "gap_to_pole":
+        result = get_gap_to_pole(**all_by_default, load_gap_to_pole=loaders.load_gap_to_pole)
+        build = lambda: build_gap_to_pole_chart(result, **titled)
     else:
         result = get_race_pace(**all_by_default, load_race_pace_data=loaders.load_race_pace_data)
         build = lambda: build_race_pace_chart(result, **titled)

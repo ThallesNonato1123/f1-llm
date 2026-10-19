@@ -1,7 +1,7 @@
 import statistics
 from dataclasses import asdict, dataclass
 
-from f1llm.tools.lap_times import build_lap_times_chart, get_lap_times
+from f1llm.tools.lap_times import build_lap_times_by_compound_chart, build_lap_times_chart, get_lap_times
 from f1llm.tools.gap_to_winner import build_gap_to_winner_chart, get_gap_to_winner
 from f1llm.tools.race_pace import build_race_pace_chart, get_race_pace
 from f1llm.tools.session_results import get_session_results
@@ -14,6 +14,7 @@ from f1llm.tools.standings import (
 from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
 from f1llm.tools.top_speeds import build_top_speeds_chart, get_top_speeds
+from f1llm.tools.gap_to_pole import build_gap_to_pole_chart, get_gap_to_pole
 from f1llm.tools.gg_diagram import build_gg_diagram_chart, get_gg_diagram
 from f1llm.tools.speed_delta_trace import build_speed_delta_trace_chart, get_speed_delta_trace
 from f1llm.tools.speed_quadrant import build_speed_quadrant_chart, get_speed_quadrant
@@ -84,7 +85,12 @@ def _lap_times(tool_input, loaders):
             laps_by_driver.setdefault(lap.driver_code, []).append(lap)
         return {"drivers": [_lap_times_summary(code, laps) for code, laps in laps_by_driver.items()]}
 
-    return result, summarize, lambda: build_lap_times_chart(result.laps)
+    def chart():
+        if tool_input.get("by_compound"):
+            return build_lap_times_by_compound_chart(result.laps)
+        return build_lap_times_chart(result.laps)
+
+    return result, summarize, chart
 
 
 def _lap_times_summary(driver_code, laps):
@@ -369,6 +375,25 @@ def _speed_delta_trace(tool_input, loaders):
     return result, summarize, chart
 
 
+def _gap_to_pole(tool_input, loaders):
+    result = get_gap_to_pole(
+        **_session(tool_input),
+        drivers=tool_input.get("drivers") or None,
+        load_gap_to_pole=loaders.load_gap_to_pole,
+    )
+
+    def summarize():
+        return {
+            "event_name": result.event_name,
+            "drivers": [asdict(driver) for driver in result.drivers],
+        }
+
+    def chart():
+        return build_gap_to_pole_chart(result, year=tool_input["year"], session_type=tool_input["session_type"])
+
+    return result, summarize, chart
+
+
 _HANDLERS = {
     "get_telemetry_comparison": _telemetry,
     "get_race_pace": _race_pace,
@@ -383,6 +408,7 @@ _HANDLERS = {
     "get_speed_quadrant": _speed_quadrant,
     "get_gg_diagram": _gg_diagram,
     "get_speed_delta_trace": _speed_delta_trace,
+    "get_gap_to_pole": _gap_to_pole,
 }
 
 
@@ -447,8 +473,17 @@ TOOL_DEFINITIONS = [
     _tool(
         "get_lap_times",
         "Every lap time of the given drivers in a session, with each driver's best lap, mean and median.",
-        {**_session_properties(["Race", "Qualifying", "Sprint"]), "drivers": _DRIVERS, "plot": _PLOT},
-        ["year", "event", "session_type", "drivers", "plot"],
+        {
+            **_session_properties(["Race", "Qualifying", "Sprint"]),
+            "drivers": _DRIVERS,
+            "by_compound": {
+                "type": "boolean",
+                "description": "When plotting, color each lap by tyre compound instead of one line per "
+                "driver — best for seeing degradation/pit stops within a single driver's laps.",
+            },
+            "plot": _PLOT,
+        },
+        ["year", "event", "session_type", "drivers", "by_compound", "plot"],
     ),
     _tool(
         "get_telemetry_comparison",
@@ -562,5 +597,12 @@ TOOL_DEFINITIONS = [
             "plot": _PLOT,
         },
         ["year", "event", "session_type", "drivers", "plot"],
+    ),
+    _tool(
+        "get_gap_to_pole",
+        "Each driver's gap (seconds) to the fastest lap of the session, sorted fastest to slowest. "
+        "Omit drivers for the whole field.",
+        {**_session_properties(["Race", "Qualifying", "Sprint"]), "drivers": _DRIVERS, "plot": _PLOT},
+        ["year", "event", "session_type", "plot"],
     ),
 ]

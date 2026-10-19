@@ -122,10 +122,10 @@ def test_lap_times_send_best_mean_median_and_every_lap_per_driver():
     def load_laps(year, event, session_type, drivers):
         assert drivers == ["LEC"]
         return [
-            {"Driver": "LEC", "LapNumber": 1.0, "LapTime": timedelta(seconds=85.5)},
-            {"Driver": "LEC", "LapNumber": 2.0, "LapTime": timedelta(seconds=84.0)},
-            {"Driver": "LEC", "LapNumber": 3.0, "LapTime": None},
-            {"Driver": "LEC", "LapNumber": 4.0, "LapTime": timedelta(seconds=86.1)},
+            {"Driver": "LEC", "LapNumber": 1.0, "LapTime": timedelta(seconds=85.5), "Compound": "SOFT"},
+            {"Driver": "LEC", "LapNumber": 2.0, "LapTime": timedelta(seconds=84.0), "Compound": "SOFT"},
+            {"Driver": "LEC", "LapNumber": 3.0, "LapTime": None, "Compound": "SOFT"},
+            {"Driver": "LEC", "LapNumber": 4.0, "LapTime": timedelta(seconds=86.1), "Compound": "MEDIUM"},
         ]
 
     outcome = run_tool(
@@ -156,7 +156,7 @@ def test_lap_times_send_best_mean_median_and_every_lap_per_driver():
 
 def test_lap_times_come_with_the_lap_times_chart_when_asked_to_plot():
     def load_laps(year, event, session_type, drivers):
-        return [{"Driver": "LEC", "LapNumber": 1.0, "LapTime": timedelta(seconds=85.5)}]
+        return [{"Driver": "LEC", "LapNumber": 1.0, "LapTime": timedelta(seconds=85.5), "Compound": "SOFT"}]
 
     outcome = run_tool(
         "get_lap_times",
@@ -166,6 +166,21 @@ def test_lap_times_come_with_the_lap_times_chart_when_asked_to_plot():
 
     [trace] = outcome.figure["data"]
     assert (trace["name"], trace["x"], trace["y"]) == ("LEC", [1], [85.5])
+
+
+def test_lap_times_chart_colors_by_compound_when_asked():
+    def load_laps(year, event, session_type, drivers):
+        return [{"Driver": "LEC", "LapNumber": 1.0, "LapTime": timedelta(seconds=85.5), "Compound": "SOFT"}]
+
+    outcome = run_tool(
+        "get_lap_times",
+        {"year": 2024, "event": "Monza", "session_type": "Race", "drivers": ["LEC"],
+         "by_compound": True, "plot": True},
+        loaders=SimpleNamespace(load_laps=load_laps),
+    )
+
+    [trace] = outcome.figure["data"]
+    assert trace["name"] == "Macio"
 
 
 def pace_lap(driver, lap_number, lap_seconds, *, stint=1.0):
@@ -591,3 +606,43 @@ def test_speed_delta_trace_comes_with_the_chart_when_asked_to_plot():
     )
 
     assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Qualifying - Traço de velocidade com delta"
+
+
+def monza_gap_to_pole(year, event, session_type, drivers):
+    return {
+        "event_name": "Italian Grand Prix",
+        "drivers": [
+            {"driver_code": "VER", "team_color": "0600EF", "lap_time": timedelta(seconds=90.0)},
+            {"driver_code": "LEC", "team_color": "E8002D", "lap_time": timedelta(seconds=90.8)},
+        ],
+    }
+
+
+def test_gap_to_pole_sends_each_drivers_gap_without_a_chart_when_not_asked_to_plot():
+    outcome = run_tool(
+        "get_gap_to_pole",
+        {"year": 2024, "event": "Monza", "session_type": "Qualifying", "plot": False},
+        loaders=SimpleNamespace(load_gap_to_pole=monza_gap_to_pole),
+    )
+
+    assert outcome == ToolOutcome(
+        content={
+            "event_name": "Italian Grand Prix",
+            "drivers": [
+                {"driver_code": "VER", "team_color": "#0600EF", "lap_time_seconds": 90.0, "gap_seconds": 0.0},
+                {"driver_code": "LEC", "team_color": "#E8002D", "lap_time_seconds": 90.8, "gap_seconds": 0.8},
+            ],
+        },
+        figure=None,
+        is_error=False,
+    )
+
+
+def test_gap_to_pole_comes_with_the_chart_when_asked_to_plot():
+    outcome = run_tool(
+        "get_gap_to_pole",
+        {"year": 2024, "event": "Monza", "session_type": "Qualifying", "plot": True},
+        loaders=SimpleNamespace(load_gap_to_pole=monza_gap_to_pole),
+    )
+
+    assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Qualifying - Gap para a pole"

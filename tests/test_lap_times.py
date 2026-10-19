@@ -4,7 +4,8 @@ import pytest
 from dark_theme import assert_dark_theme
 
 from f1llm.errors import SessionDataUnavailable
-from f1llm.tools.lap_times import LapTime, build_lap_times_chart, get_lap_times
+from f1llm.tools.lap_times import LapTime, build_lap_times_by_compound_chart, build_lap_times_chart, get_lap_times
+from f1llm.tools.stints import COMPOUND_COLORS
 
 
 def test_rejects_unsupported_session_type():
@@ -24,9 +25,11 @@ def test_rejects_empty_drivers_list():
 
 def test_returns_transformed_laps_for_known_session():
     raw_rows = [
-        {"Driver": "VER", "LapNumber": 1.0, "LapTime": timedelta(minutes=1, seconds=34, milliseconds=123)},
-        {"Driver": "VER", "LapNumber": 2.0, "LapTime": None},
-        {"Driver": "HAM", "LapNumber": 1.0, "LapTime": timedelta(minutes=1, seconds=35, milliseconds=789)},
+        {"Driver": "VER", "LapNumber": 1.0, "LapTime": timedelta(minutes=1, seconds=34, milliseconds=123),
+         "Compound": "SOFT"},
+        {"Driver": "VER", "LapNumber": 2.0, "LapTime": None, "Compound": "SOFT"},
+        {"Driver": "HAM", "LapNumber": 1.0, "LapTime": timedelta(minutes=1, seconds=35, milliseconds=789),
+         "Compound": "MEDIUM"},
     ]
 
     result = get_lap_times(
@@ -39,9 +42,9 @@ def test_returns_transformed_laps_for_known_session():
 
     assert result.found is True
     assert result.laps == [
-        LapTime(lap_number=1, driver_code="VER", seconds=94.123, formatted="0:01:34.123000"),
-        LapTime(lap_number=2, driver_code="VER", seconds=None, formatted=None),
-        LapTime(lap_number=1, driver_code="HAM", seconds=95.789, formatted="0:01:35.789000"),
+        LapTime(lap_number=1, driver_code="VER", seconds=94.123, formatted="0:01:34.123000", compound="SOFT"),
+        LapTime(lap_number=2, driver_code="VER", seconds=None, formatted=None, compound="SOFT"),
+        LapTime(lap_number=1, driver_code="HAM", seconds=95.789, formatted="0:01:35.789000", compound="MEDIUM"),
     ]
 
 
@@ -95,3 +98,23 @@ def test_chart_uses_the_dark_theme():
     chart = build_lap_times_chart(laps)
 
     assert_dark_theme(chart["layout"])
+
+
+def test_chart_by_compound_plots_a_scatter_point_per_lap_colored_by_compound():
+    laps = [
+        LapTime(lap_number=1, driver_code="VER", seconds=94.123, formatted="...", compound="SOFT"),
+        LapTime(lap_number=2, driver_code="VER", seconds=None, formatted=None, compound="SOFT"),
+        LapTime(lap_number=3, driver_code="VER", seconds=93.456, formatted="...", compound="MEDIUM"),
+    ]
+
+    chart = build_lap_times_by_compound_chart(laps)
+
+    traces_by_name = {t["name"]: t for t in chart["data"]}
+    assert traces_by_name["Macio"]["mode"] == "markers"
+    assert traces_by_name["Macio"]["x"] == [1]
+    assert traces_by_name["Macio"]["y"] == [94.123]
+    assert traces_by_name["Macio"]["marker"]["color"] == COMPOUND_COLORS["SOFT"]
+    assert traces_by_name["Médio"]["x"] == [3]
+    assert traces_by_name["Médio"]["y"] == [93.456]
+    assert chart["layout"]["xaxis"]["title"] == "Volta"
+    assert chart["layout"]["yaxis"]["title"] == "Tempo de volta (s)"

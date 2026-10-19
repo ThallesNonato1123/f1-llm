@@ -51,8 +51,8 @@ def test_answers_directly_and_appends_the_exchange_to_the_history():
 
 
 MONZA_LAPS = [
-    {"Driver": "LEC", "LapNumber": 1.0, "LapTime": timedelta(seconds=85.5)},
-    {"Driver": "LEC", "LapNumber": 2.0, "LapTime": timedelta(seconds=84.0)},
+    {"Driver": "LEC", "LapNumber": 1.0, "LapTime": timedelta(seconds=85.5), "Compound": "SOFT"},
+    {"Driver": "LEC", "LapNumber": 2.0, "LapTime": timedelta(seconds=84.0), "Compound": "SOFT"},
 ]
 LAP_TIMES_INPUT = {"year": 2024, "event": "Monza", "session_type": "Race", "drivers": ["LEC"], "plot": True}
 

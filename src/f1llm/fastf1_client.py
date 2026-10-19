@@ -64,8 +64,9 @@ def load_laps(
             "Driver": row["Driver"],
             "LapNumber": row["LapNumber"],
             "LapTime": None if pd.isna(row["LapTime"]) else row["LapTime"],
+            "Compound": None if pd.isna(row["Compound"]) else row["Compound"],
         }
-        for row in laps[["Driver", "LapNumber", "LapTime"]].to_dict("records")
+        for row in laps[["Driver", "LapNumber", "LapTime", "Compound"]].to_dict("records")
     ]
 
 
@@ -454,6 +455,46 @@ def load_speed_delta_trace(
         },
         "corners": corners,
     }
+
+
+def load_gap_to_pole(year: int, event: str, session_type: str, drivers: list[str] | None) -> dict:
+    _ensure_cache_enabled()
+
+    try:
+        session = fastf1.get_session(year, event, session_type)
+        session.load(laps=True, telemetry=False, weather=False, messages=False)
+        laps = session.laps
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    if laps is None or laps.empty:
+        raise SessionDataUnavailable(
+            f"No lap data found for {event} {year} {session_type}"
+        )
+
+    team_colors = {
+        row["Abbreviation"]: row["TeamColor"]
+        for row in session.results[["Abbreviation", "TeamColor"]].to_dict("records")
+    }
+
+    driver_codes = drivers if drivers is not None else sorted(laps["Driver"].unique())
+    rows = []
+    for driver in driver_codes:
+        fastest = laps.pick_drivers(driver).pick_fastest()
+        if fastest is None or pd.isna(fastest["LapTime"]):
+            continue
+        rows.append({
+            "driver_code": driver,
+            "team_color": team_colors.get(driver),
+            "lap_time": fastest["LapTime"],
+        })
+
+    if not rows:
+        raise SessionDataUnavailable(
+            f"No valid lap found for drivers {drivers} in {event} {year} {session_type}"
+        )
+
+    return {"event_name": session.event["EventName"], "drivers": rows}
 
 
 def load_driver_standings(year: int, event: str | None) -> list[dict]:
