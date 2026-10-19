@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import anthropic
@@ -10,7 +9,8 @@ from pydantic import BaseModel
 
 from f1llm import fastf1_client
 from f1llm.llm.chat import answer
-from f1llm.llm.production import DEFAULT_EFFORT, DEFAULT_MODEL, claude_create_message
+from f1llm.llm.production import claude_create_message
+from f1llm.settings import get_settings
 
 UPSTREAM_ERROR_TEXT = "Não foi possível completar a análise agora. Tente novamente."
 
@@ -32,11 +32,10 @@ class ChatResponse(BaseModel):
 
 
 def get_create_message():
-    if not (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")):
+    settings = get_settings()
+    if not settings.has_anthropic_credentials():
         raise HTTPException(status_code=503, detail=UPSTREAM_ERROR_TEXT)
-    model = os.environ.get("F1LLM_MODEL", DEFAULT_MODEL)
-    effort = os.environ.get("F1LLM_EFFORT", DEFAULT_EFFORT)
-    return claude_create_message(anthropic.Anthropic(), model=model, effort=effort)
+    return claude_create_message(anthropic.Anthropic(), model=settings.f1llm_model, effort=settings.f1llm_effort)
 
 
 def get_loaders():

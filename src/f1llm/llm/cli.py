@@ -1,25 +1,25 @@
 """Terminal chat to try the LLM layer: uv run f1llm-chat"""
 
-import os
-
 import anthropic
 import fastf1
 
 from f1llm import fastf1_client
 from f1llm.llm.chat import answer
-from f1llm.llm.production import DEFAULT_EFFORT, DEFAULT_MODEL, claude_create_message
+from f1llm.llm.production import claude_create_message
 from f1llm.preview import open_in_browser
+from f1llm.settings import get_settings
 
 EXIT_WORDS = {"sair", "exit", "quit"}
 
 
 def main() -> None:
     fastf1.set_log_level("ERROR")
-    model = os.environ.get("F1LLM_MODEL", DEFAULT_MODEL)
-    effort = os.environ.get("F1LLM_EFFORT", DEFAULT_EFFORT)
-    create_message = claude_create_message(anthropic.Anthropic(), model=model, effort=effort)
+    settings = get_settings()
+    create_message = claude_create_message(
+        anthropic.Anthropic(), model=settings.f1llm_model, effort=settings.f1llm_effort
+    )
 
-    print(f"f1llm-chat ({model}, effort {effort}). Digite 'sair' para encerrar.\n")
+    print(f"f1llm-chat ({settings.f1llm_model}, effort {settings.f1llm_effort}). Digite 'sair' para encerrar.\n")
     history: list[dict] = []
     while True:
         try:

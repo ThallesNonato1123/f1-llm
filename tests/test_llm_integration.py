@@ -3,7 +3,7 @@ import pytest
 
 from f1llm import fastf1_client
 from f1llm.llm.chat import answer
-from f1llm.llm.cli import DEFAULT_EFFORT, DEFAULT_MODEL, claude_create_message
+from f1llm.llm.production import DEFAULT_EFFORT, DEFAULT_MODEL, claude_create_message
 
 
 @pytest.mark.integration
