@@ -12,13 +12,14 @@ from f1llm.tools.race_pace import build_race_pace_chart, get_race_pace
 from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
 from f1llm.tools.gg_diagram import build_gg_diagram_chart, get_gg_diagram
+from f1llm.tools.speed_delta_trace import build_speed_delta_trace_chart, get_speed_delta_trace
 from f1llm.tools.speed_quadrant import build_speed_quadrant_chart, get_speed_quadrant
 from f1llm.tools.top_speeds import build_top_speeds_chart, get_top_speeds
 from f1llm.tools.tyre_degradation import build_tyre_degradation_chart, get_tyre_degradation
 
 CHARTS = (
     "lap_times", "telemetry", "stints", "race_pace", "gap_to_winner", "top_speeds", "tyre_degradation",
-    "speed_quadrant", "gg_diagram",
+    "speed_quadrant", "gg_diagram", "speed_delta_trace",
 )
 
 
@@ -98,6 +99,9 @@ def build_preview(request: PreviewRequest, *, loaders) -> PreviewResult:
     elif request.chart == "gg_diagram":
         result = get_gg_diagram(**common, load_gg_diagram=loaders.load_gg_diagram)
         build = lambda: build_gg_diagram_chart(result, **titled)
+    elif request.chart == "speed_delta_trace":
+        result = get_speed_delta_trace(**common, load_speed_delta_trace=loaders.load_speed_delta_trace)
+        build = lambda: build_speed_delta_trace_chart(result, **titled)
     else:
         result = get_race_pace(**all_by_default, load_race_pace_data=loaders.load_race_pace_data)
         build = lambda: build_race_pace_chart(result, **titled)

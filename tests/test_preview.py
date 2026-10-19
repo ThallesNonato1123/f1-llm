@@ -264,6 +264,27 @@ def test_builds_gg_diagram_chart_from_the_requested_drivers():
     assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Diagrama G-G"
 
 
+def test_builds_speed_delta_trace_chart_from_the_requested_drivers():
+    def load_speed_delta_trace(year, event, session_type, drivers, laps):
+        return {
+            "event_name": "Italian Grand Prix",
+            "drivers": [
+                {"driver_code": drivers[0], "distance": [0.0, 10.0], "speed": [280.0, 290.0]},
+                {"driver_code": drivers[1], "distance": [0.0, 10.0], "speed": [275.0, 285.0]},
+            ],
+            "delta": {"distance": [0.0, 10.0], "seconds": [0.0, -0.08]},
+            "corners": [{"number": 1, "distance": 5.0}],
+        }
+
+    result = build_preview(
+        request("speed_delta_trace", ["VER", "HAM"]),
+        loaders=SimpleNamespace(load_speed_delta_trace=load_speed_delta_trace),
+    )
+
+    assert result.found is True
+    assert result.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Traço de velocidade com delta"
+
+
 def test_reports_not_found_with_the_tools_reason_when_session_has_no_data():
     def load_laps(year, event, session_type, drivers):
         raise SessionDataUnavailable("No data for Monza 2024 Race")

@@ -547,3 +547,47 @@ def test_gg_diagram_comes_with_the_chart_when_asked_to_plot():
     )
 
     assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Race - Diagrama G-G"
+
+
+def monza_speed_delta_trace(year, event, session_type, drivers, laps):
+    return {
+        "event_name": "Italian Grand Prix",
+        "drivers": [
+            {"driver_code": drivers[0], "distance": [0.0, 10.0], "speed": [280.0, 290.0]},
+            {"driver_code": drivers[1], "distance": [0.0, 10.0], "speed": [275.0, 285.0]},
+        ],
+        "delta": {"distance": [0.0, 10.0], "seconds": [0.0, -0.08]},
+        "corners": [{"number": 1, "distance": 5.0}],
+    }
+
+
+def test_speed_delta_trace_sends_top_min_speed_and_final_delta_without_a_chart_when_not_asked_to_plot():
+    outcome = run_tool(
+        "get_speed_delta_trace",
+        {"year": 2024, "event": "Monza", "session_type": "Qualifying", "drivers": ["VER", "HAM"], "plot": False},
+        loaders=SimpleNamespace(load_speed_delta_trace=monza_speed_delta_trace),
+    )
+
+    assert outcome == ToolOutcome(
+        content={
+            "event_name": "Italian Grand Prix",
+            "drivers": [
+                {"driver_code": "VER", "top_speed_kmh": 290.0, "min_speed_kmh": 280.0},
+                {"driver_code": "HAM", "top_speed_kmh": 285.0, "min_speed_kmh": 275.0},
+            ],
+            "final_delta_seconds": -0.08,
+            "corners": [{"number": 1, "distance": 5.0}],
+        },
+        figure=None,
+        is_error=False,
+    )
+
+
+def test_speed_delta_trace_comes_with_the_chart_when_asked_to_plot():
+    outcome = run_tool(
+        "get_speed_delta_trace",
+        {"year": 2024, "event": "Monza", "session_type": "Qualifying", "drivers": ["VER", "HAM"], "plot": True},
+        loaders=SimpleNamespace(load_speed_delta_trace=monza_speed_delta_trace),
+    )
+
+    assert outcome.figure["layout"]["title"] == "2024 Italian Grand Prix - Qualifying - Traço de velocidade com delta"

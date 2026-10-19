@@ -9,6 +9,7 @@ from f1llm.fastf1_client import (
     load_laps,
     load_race_pace_data,
     load_results,
+    load_speed_delta_trace,
     load_speed_quadrant,
     load_stint_data,
     load_team_standings,
@@ -219,6 +220,31 @@ def test_loads_gg_diagram_telemetry_with_plausible_accelerations():
 def test_rejects_gg_diagram_data_when_fastf1_fails_to_load_laps_without_raising():
     with pytest.raises(SessionDataUnavailable):
         load_gg_diagram(2025, "Monza", "Race", ["VER"])
+
+
+@pytest.mark.integration
+def test_loads_speed_delta_trace_with_matching_distance_axes_and_corners():
+    data = load_speed_delta_trace(2021, "Abu Dhabi", "Race", ["VER", "HAM"], None)
+
+    assert data["event_name"] == "Abu Dhabi Grand Prix"
+
+    ver, ham = data["drivers"]
+    assert ver["driver_code"] == "VER"
+    assert ham["driver_code"] == "HAM"
+    assert len(ver["distance"]) == len(ver["speed"]) > 0
+
+    # The delta is aligned to the reference (VER)'s own distance axis.
+    assert len(data["delta"]["distance"]) == len(data["delta"]["seconds"]) == len(ver["distance"])
+
+    assert len(data["corners"]) >= 15  # Yas Marina has 16 corners
+    assert {c["number"] for c in data["corners"]} >= {1, 2, 3}
+    assert all(c["distance"] > 0 for c in data["corners"])
+
+
+@pytest.mark.integration
+def test_rejects_speed_delta_trace_when_fastf1_fails_to_load_laps_without_raising():
+    with pytest.raises(SessionDataUnavailable):
+        load_speed_delta_trace(2025, "Monza", "Race", ["VER", "HAM"], None)
 
 
 @pytest.mark.integration

@@ -15,6 +15,7 @@ from f1llm.tools.stints import build_stints_chart, get_stints
 from f1llm.tools.telemetry import build_telemetry_chart, get_telemetry_comparison
 from f1llm.tools.top_speeds import build_top_speeds_chart, get_top_speeds
 from f1llm.tools.gg_diagram import build_gg_diagram_chart, get_gg_diagram
+from f1llm.tools.speed_delta_trace import build_speed_delta_trace_chart, get_speed_delta_trace
 from f1llm.tools.speed_quadrant import build_speed_quadrant_chart, get_speed_quadrant
 from f1llm.tools.tyre_degradation import build_tyre_degradation_chart, get_tyre_degradation
 
@@ -335,6 +336,39 @@ def _gg_diagram(tool_input, loaders):
     return result, summarize, chart
 
 
+def _speed_delta_trace(tool_input, loaders):
+    laps = tool_input.get("laps")
+    result = get_speed_delta_trace(
+        **_session(tool_input),
+        drivers=tool_input["drivers"],
+        laps={entry["driver"]: entry["lap"] for entry in laps} if laps else None,
+        load_speed_delta_trace=loaders.load_speed_delta_trace,
+    )
+
+    def summarize():
+        return {
+            "event_name": result.event_name,
+            "drivers": [
+                {
+                    "driver_code": driver.driver_code,
+                    "top_speed_kmh": max(point.speed for point in driver.points),
+                    "min_speed_kmh": min(point.speed for point in driver.points),
+                }
+                for driver in result.drivers
+            ],
+            # Positive = the second driver is ahead of the first at that point.
+            "final_delta_seconds": round(result.delta[-1].seconds, 3) if result.delta else None,
+            "corners": [asdict(corner) for corner in result.corners],
+        }
+
+    def chart():
+        return build_speed_delta_trace_chart(
+            result, year=tool_input["year"], session_type=tool_input["session_type"]
+        )
+
+    return result, summarize, chart
+
+
 _HANDLERS = {
     "get_telemetry_comparison": _telemetry,
     "get_race_pace": _race_pace,
@@ -348,6 +382,7 @@ _HANDLERS = {
     "get_tyre_degradation": _tyre_degradation,
     "get_speed_quadrant": _speed_quadrant,
     "get_gg_diagram": _gg_diagram,
+    "get_speed_delta_trace": _speed_delta_trace,
 }
 
 
@@ -504,6 +539,28 @@ TOOL_DEFINITIONS = [
         "speed and position telemetry — shows how hard the car brakes, accelerates and corners, and each "
         "driver's average combined (magnitude) acceleration. Best with 2-3 drivers.",
         {**_session_properties(["Race", "Qualifying", "Sprint"]), "drivers": _DRIVERS, "plot": _PLOT},
+        ["year", "event", "session_type", "drivers", "plot"],
+    ),
+    _tool(
+        "get_speed_delta_trace",
+        "Speed (km/h) over lap distance for exactly 2 drivers' fastest laps (or a specific lap each), with "
+        "the accumulated time delta between them and each corner's position. Shows exactly where on track "
+        "one driver gains or loses time to the other. Requires exactly 2 drivers.",
+        {
+            **_session_properties(["Race", "Qualifying", "Sprint"]),
+            "drivers": _DRIVERS,
+            "laps": {
+                "type": "array",
+                "description": "Specific lap per driver; omit to use each driver's fastest lap.",
+                "items": {
+                    "type": "object",
+                    "properties": {"driver": {"type": "string"}, "lap": {"type": "integer"}},
+                    "required": ["driver", "lap"],
+                    "additionalProperties": False,
+                },
+            },
+            "plot": _PLOT,
+        },
         ["year", "event", "session_type", "drivers", "plot"],
     ),
 ]

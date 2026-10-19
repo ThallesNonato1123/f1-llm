@@ -383,6 +383,79 @@ def load_gg_diagram(year: int, event: str, session_type: str, drivers: list[str]
     return {"event_name": session.event["EventName"], "drivers": driver_entries}
 
 
+def load_speed_delta_trace(
+    year: int, event: str, session_type: str, drivers: list[str], laps: dict[str, int] | None
+) -> dict:
+    _ensure_cache_enabled()
+
+    try:
+        session = fastf1.get_session(year, event, session_type)
+        session.load(laps=True, telemetry=True, weather=False, messages=False)
+        session_laps = session.laps
+    except Exception as exc:
+        raise SessionDataUnavailable(str(exc)) from exc
+
+    if session_laps is None or session_laps.empty:
+        raise SessionDataUnavailable(
+            f"No lap data found for {event} {year} {session_type}"
+        )
+
+    requested_laps = laps or {}
+    picked_laps = []
+    for driver in drivers:
+        driver_laps = session_laps.pick_drivers(driver)
+        lap_number = requested_laps.get(driver)
+        if lap_number is not None:
+            matching = driver_laps.pick_laps(lap_number)
+            lap = matching.iloc[0] if not matching.empty else None
+        else:
+            lap = driver_laps.pick_fastest()
+        if lap is None:
+            raise SessionDataUnavailable(
+                f"No valid lap found for driver {driver!r} in {event} {year} {session_type}"
+            )
+        picked_laps.append(lap)
+
+    reference_lap, compare_lap = picked_laps
+    # ADR 0005-style reuse: fastf1.utils.delta_time() is deprecated upstream
+    # but still the simplest correct way to get this, instead of
+    # reimplementing the interpolation ourselves. Its own ref/compare
+    # telemetry (not a separate get_telemetry() call) is what the delta was
+    # actually computed against, so the speed traces stay on a consistent
+    # distance axis with the delta line.
+    delta, ref_telemetry, compare_telemetry = fastf1.utils.delta_time(reference_lap, compare_lap)
+
+    def driver_speed_trace(driver_code: str, telemetry) -> dict:
+        return {
+            "driver_code": driver_code,
+            "distance": telemetry["Distance"].tolist(),
+            "speed": telemetry["Speed"].tolist(),
+        }
+
+    circuit_info = session.get_circuit_info()
+    corners = (
+        [
+            {"number": int(row["Number"]), "distance": float(row["Distance"])}
+            for row in circuit_info.corners[["Number", "Distance"]].to_dict("records")
+        ]
+        if circuit_info is not None
+        else []
+    )
+
+    return {
+        "event_name": session.event["EventName"],
+        "drivers": [
+            driver_speed_trace(drivers[0], ref_telemetry),
+            driver_speed_trace(drivers[1], compare_telemetry),
+        ],
+        "delta": {
+            "distance": ref_telemetry["Distance"].tolist(),
+            "seconds": delta.tolist(),
+        },
+        "corners": corners,
+    }
+
+
 def load_driver_standings(year: int, event: str | None) -> list[dict]:
     _ensure_cache_enabled()
 
