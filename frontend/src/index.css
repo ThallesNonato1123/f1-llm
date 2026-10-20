@@ -447,6 +447,27 @@ h1 {
   text-align: center;
 }
 
+.credit {
+  position: fixed;
+  right: 14px;
+  bottom: 8px;
+  z-index: 21;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 7px;
+  padding: 4px 7px;
+  color: #6e6e74;
+  font-size: 11px;
+  text-decoration: none;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.credit:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #d9d9db;
+}
+
 @media (max-width: 640px) {
   .topbar {
     height: 58px;
@@ -481,5 +502,9 @@ h1 {
 
   .composer-wrap {
     padding-inline: 10px;
+  }
+
+  .credit span {
+    display: none;
   }
 }
