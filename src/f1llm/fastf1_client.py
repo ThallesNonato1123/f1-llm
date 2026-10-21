@@ -1,10 +1,12 @@
 from pathlib import Path
 
 import fastf1
+import numpy as np
 import pandas as pd
 from fastf1.ergast import Ergast
 
 from f1llm.errors import SessionDataUnavailable
+from f1llm.settings import get_settings
 
 _CACHE_DIR = Path(__file__).resolve().parent.parent.parent / ".fastf1cache"
 _cache_enabled = False
@@ -15,6 +17,10 @@ def _ensure_cache_enabled() -> None:
     if not _cache_enabled:
         _CACHE_DIR.mkdir(exist_ok=True)
         fastf1.Cache.enable_cache(str(_CACHE_DIR))
+        # F1 now requires an authenticated F1TV account to fetch the livetiming
+        # archive (since Oct 2026); reads F1_USERNAME/F1_PASSWORD itself.
+        if get_settings().has_f1tv_credentials():
+            fastf1.set_auth_method("password")
         _cache_enabled = True
 
 
@@ -384,6 +390,26 @@ def load_gg_diagram(year: int, event: str, session_type: str, drivers: list[str]
     return {"event_name": session.event["EventName"], "drivers": driver_entries}
 
 
+def _delta_time(reference_lap, compare_lap) -> tuple[pd.Series, "fastf1.core.Telemetry", "fastf1.core.Telemetry"]:
+    """Port of fastf1.utils.delta_time(), removed upstream in 3.9.0a0."""
+    ref = reference_lap.get_car_data(interpolate_edges=True).add_distance()
+    comp = compare_lap.get_car_data(interpolate_edges=True).add_distance()
+
+    def mini_pro(stream):
+        dstream_start = stream[1] - stream[0]
+        dstream_end = stream[-1] - stream[-2]
+        return np.concatenate([[stream[0] - dstream_start], stream, [stream[-1] + dstream_end]])
+
+    ltime = mini_pro(comp["Time"].dt.total_seconds().to_numpy())
+    multiplier = ref.Distance.iat[-1] / comp.Distance.iat[-1]
+    ldistance = mini_pro(comp["Distance"].to_numpy()) * multiplier
+    lap_time = np.interp(ref["Distance"], ldistance, ltime)
+
+    delta = lap_time - ref["Time"].dt.total_seconds()
+
+    return delta, ref, comp
+
+
 def load_speed_delta_trace(
     year: int, event: str, session_type: str, drivers: list[str], laps: dict[str, int] | None
 ) -> dict:
@@ -418,13 +444,12 @@ def load_speed_delta_trace(
         picked_laps.append(lap)
 
     reference_lap, compare_lap = picked_laps
-    # ADR 0005-style reuse: fastf1.utils.delta_time() is deprecated upstream
-    # but still the simplest correct way to get this, instead of
-    # reimplementing the interpolation ourselves. Its own ref/compare
-    # telemetry (not a separate get_telemetry() call) is what the delta was
-    # actually computed against, so the speed traces stay on a consistent
-    # distance axis with the delta line.
-    delta, ref_telemetry, compare_telemetry = fastf1.utils.delta_time(reference_lap, compare_lap)
+    # fastf1.utils.delta_time() was removed upstream in 3.9.0a0 (it had been
+    # deprecated since 3.0.0), so this ports its last implementation here.
+    # Its own ref/compare telemetry (not a separate get_telemetry() call) is
+    # what the delta was actually computed against, so the speed traces stay
+    # on a consistent distance axis with the delta line.
+    delta, ref_telemetry, compare_telemetry = _delta_time(reference_lap, compare_lap)
 
     def driver_speed_trace(driver_code: str, telemetry) -> dict:
         return {

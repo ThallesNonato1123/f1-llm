@@ -8,7 +8,7 @@ def test_get_settings_reads_anthropic_api_key_from_the_environment(monkeypatch):
 
     settings = get_settings()
 
-    assert settings.anthropic_api_key == "sk-ant-test"
+    assert settings.anthropic_api_key.get_secret_value() == "sk-ant-test"
 
 
 def test_get_settings_falls_back_to_the_default_model_and_effort(monkeypatch):
