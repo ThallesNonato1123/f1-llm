@@ -1,9 +1,13 @@
+import time
 from datetime import timedelta
 
+import fastf1
 import pytest
 
+import f1llm.fastf1_client as fastf1_client
 from f1llm.errors import SessionDataUnavailable
 from f1llm.fastf1_client import (
+    _ensure_cache_enabled,
     load_driver_standings,
     load_best_sectors,
     load_gap_to_pole,
@@ -22,6 +26,23 @@ from f1llm.fastf1_client import (
     load_tyre_degradation,
 )
 from f1llm.tools.gg_diagram import get_gg_diagram
+
+
+@pytest.mark.integration
+def test_requests_get_gives_up_quickly_when_the_network_goes_silent():
+    _ensure_cache_enabled()
+
+    # 203.0.113.1 is TEST-NET-1 (RFC 5737): reserved for documentation, never
+    # routed to a real host, so the connection goes silent exactly like the
+    # real stalled transfer that caused this test to be written -- without
+    # relying on flaky external infrastructure.
+    start = time.monotonic()
+    with pytest.raises(Exception):
+        fastf1.Cache.requests_get("http://203.0.113.1")
+    elapsed = time.monotonic() - start
+
+    # Bounded by our configured request timeout, not the OS's multi-minute retry.
+    assert elapsed < fastf1_client._REQUEST_TIMEOUT_SECONDS + 5
 
 
 @pytest.mark.integration

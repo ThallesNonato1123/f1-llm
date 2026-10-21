@@ -3,6 +3,7 @@ from pathlib import Path
 import fastf1
 import numpy as np
 import pandas as pd
+import requests
 from fastf1.ergast import Ergast
 
 from f1llm.errors import SessionDataUnavailable
@@ -10,6 +11,31 @@ from f1llm.settings import get_settings
 
 _CACHE_DIR = Path(__file__).resolve().parent.parent.parent / ".fastf1cache"
 _cache_enabled = False
+
+# FastF1's own requests never pass a timeout, so a stalled connection to its
+# livetiming archive hangs forever instead of surfacing as SessionDataUnavailable.
+_REQUEST_TIMEOUT_SECONDS = 30.0
+
+
+class _TimeoutHTTPAdapter(requests.adapters.HTTPAdapter):
+    def __init__(self, *args, timeout: float, **kwargs):
+        self._timeout = timeout
+        super().__init__(*args, **kwargs)
+
+    def send(self, request, **kwargs):
+        # `requests.Session.send` always passes `timeout` explicitly (as `None`
+        # when the caller didn't set one), so `setdefault` would never apply.
+        if kwargs.get("timeout") is None:
+            kwargs["timeout"] = self._timeout
+        return super().send(request, **kwargs)
+
+
+def _apply_request_timeout() -> None:
+    adapter = _TimeoutHTTPAdapter(timeout=_REQUEST_TIMEOUT_SECONDS)
+    for session in (fastf1.Cache._requests_session, fastf1.Cache._requests_session_cached):
+        if session is not None:
+            session.mount("https://", adapter)
+            session.mount("http://", adapter)
 
 
 def _ensure_cache_enabled() -> None:
@@ -22,6 +48,7 @@ def _ensure_cache_enabled() -> None:
         if get_settings().has_f1tv_credentials():
             fastf1.set_auth_method("password")
         _cache_enabled = True
+    _apply_request_timeout()
 
 
 def load_results(year: int, event: str, session_type: str) -> list[dict]:
