@@ -6,7 +6,16 @@ import pytest
 
 from f1llm.errors import SessionDataUnavailable
 
-from f1llm.preview import PreviewRequest, PreviewResult, build_preview, parse_args, to_html
+from f1llm.preview import (
+    CHARTS,
+    PreviewRequest,
+    PreviewResult,
+    build_gallery,
+    build_preview,
+    gallery_to_html,
+    parse_args,
+    to_html,
+)
 
 
 def test_parses_positional_chart_year_event_session_and_drivers():
@@ -380,3 +389,53 @@ def test_html_page_loads_plotly_and_embeds_the_figure_under_the_title():
     assert "<title>lap_times 2024 Monza Race</title>" in html
     assert "plotly" in html and "<script src=" in html
     assert json.dumps(figure) in html
+
+
+def _unavailable(*args, **kwargs):
+    raise SessionDataUnavailable("no data for this test")
+
+
+def test_build_gallery_builds_every_chart_and_keeps_going_past_not_found_ones():
+    def load_laps(year, event, session_type, drivers):
+        return [
+            {"Driver": "VER", "LapNumber": 1.0, "LapTime": timedelta(seconds=85.5), "Compound": "SOFT"},
+        ]
+
+    loaders = SimpleNamespace(
+        load_laps=load_laps,
+        load_telemetry=_unavailable,
+        load_stint_data=_unavailable,
+        load_race_pace_data=_unavailable,
+        load_top_speeds=_unavailable,
+        load_tyre_degradation=_unavailable,
+        load_speed_quadrant=_unavailable,
+        load_gg_diagram=_unavailable,
+        load_speed_delta_trace=_unavailable,
+        load_gap_to_pole=_unavailable,
+        load_position_changes=_unavailable,
+        load_best_sectors=_unavailable,
+        load_qualifying_segments=_unavailable,
+    )
+
+    results = build_gallery(2024, "Monza", loaders=loaders)
+
+    charts = dict(results)
+    assert set(charts) == set(CHARTS)
+    assert charts["lap_times"].found is True
+    assert charts["lap_times_by_compound"].found is True
+    assert charts["stints"].found is False
+    assert "no data for this test" in charts["stints"].reason
+
+
+def test_gallery_to_html_embeds_found_charts_and_lists_reasons_for_missing_ones():
+    results = [
+        ("lap_times", PreviewResult(found=True, figure={"data": [{"type": "scatter"}], "layout": {}})),
+        ("stints", PreviewResult(found=False, reason="No lap data found for Monza 2024 Race")),
+    ]
+
+    page = gallery_to_html(results, title="Galeria 2024 Monza")
+
+    assert "<title>Galeria 2024 Monza</title>" in page
+    assert "lap_times" in page
+    assert '"chart-0"' in page
+    assert "Não encontrado: No lap data found for Monza 2024 Race" in page
