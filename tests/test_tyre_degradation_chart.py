@@ -145,6 +145,6 @@ def test_chart_title_background_and_legend():
 
     layout = chart["layout"]
     assert layout["title"] == "2023 Monza Grand Prix - Race - Degradação de pneu"
-    assert layout["paper_bgcolor"] == "#ffffff"
-    assert layout["plot_bgcolor"] == "#ffffff"
+    assert layout["paper_bgcolor"] == "#111111"
+    assert layout["plot_bgcolor"] == "#111111"
     assert layout["legend"]["title"]["text"] == "Equipe"

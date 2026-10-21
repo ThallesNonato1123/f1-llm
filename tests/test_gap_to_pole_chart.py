@@ -31,5 +31,5 @@ def test_chart_draws_a_horizontal_bar_per_driver_colored_by_team_fastest_on_top(
     assert bar["x"] == [0.0, 0.8, 1.5]
     assert bar["marker"]["color"] == ["#0600EF", "#E8002D", "#27F4D2"]
     assert chart["layout"]["yaxis"]["autorange"] == "reversed"
-    assert chart["layout"]["paper_bgcolor"] == "#ffffff"
-    assert chart["layout"]["plot_bgcolor"] == "#ffffff"
+    assert chart["layout"]["paper_bgcolor"] == "#111111"
+    assert chart["layout"]["plot_bgcolor"] == "#111111"

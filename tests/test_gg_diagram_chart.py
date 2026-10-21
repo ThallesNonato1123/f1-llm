@@ -114,7 +114,10 @@ def test_chart_axes_circles_theme_title_and_footnote():
     circle_shapes = [s for s in layout["shapes"] if s["type"] == "circle"]
     assert len(circle_shapes) == 3  # 1g, 2g, 3g
 
+    # The curves hint now lives in the x-axis title (safe: titles render
+    # outside the plot in their own reserved horizontal strip), not as a
+    # separate annotation competing with the per-driver labels for space.
+    assert layout["xaxis"]["title"] == "Aceleração lateral (g) — curvas à direita ← → curvas à esquerda"
+
     annotation_texts = {a["text"] for a in layout["annotations"]}
-    assert "Curvas à Direita ← → Curvas à Esquerda" in annotation_texts
-    assert "Frenagem / Tração" in annotation_texts
     assert "Pontos distantes do centro indicam alta aderência" in annotation_texts

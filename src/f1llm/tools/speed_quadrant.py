@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from f1llm.charts import dark_layout
 from f1llm.errors import SessionDataUnavailable
 
 SUPPORTED_SESSION_TYPES = {"Race", "Qualifying", "Sprint"}
@@ -91,47 +92,10 @@ def build_speed_quadrant_chart(result: SpeedQuadrantResponse, *, year: int, sess
         "showlegend": False,
     }]
 
-    center_x = sum(team.mean_speed for team in result.teams) / len(result.teams)
-    center_y = sum(team.top_speed for team in result.teams) / len(result.teams)
-
-    layout = {
+    layout = dark_layout({
         "title": f"{year} {result.event_name} - {session_type} (Melhor volta de cada equipe)",
-        "paper_bgcolor": "#ffffff",
-        "plot_bgcolor": "#ffffff",
         "xaxis": {"title": "Velocidade média (km/h)", "showgrid": True},
         "yaxis": {"title": "Velocidade máxima (km/h)", "showgrid": True},
-        "annotations": _region_annotations(center_x, center_y),
-    }
+    })
 
     return {"data": data, "layout": layout}
-
-
-# (dx, dy) in arrow-length pixels, pointing away from the center.
-_REGION_DIRECTIONS = [
-    ("Lento", (-70, 0)),
-    ("Rápido", (70, 0)),
-    ("Baixo Arrasto", (0, 70)),
-    ("Alto Arrasto", (0, -70)),
-    ("Correlacionado com Alta Eficiência", (55, 55)),
-    ("Correlacionado com Baixa Eficiência", (-55, -55)),
-    ("Correlacionado com Baixa Carga Aerodinâmica", (-55, 55)),
-    ("Correlacionado com Alta Carga Aerodinâmica", (55, -55)),
-]
-
-
-def _region_annotations(center_x: float, center_y: float) -> list[dict]:
-    return [
-        {
-            "x": center_x,
-            "y": center_y,
-            "ax": -dx,
-            "ay": dy,  # Plotly's pixel y grows downward, so a positive dy points up.
-            "axref": "pixel",
-            "ayref": "pixel",
-            "text": text,
-            "showarrow": True,
-            "arrowhead": 2,
-            "arrowcolor": "#999999",
-        }
-        for text, (dx, dy) in _REGION_DIRECTIONS
-    ]

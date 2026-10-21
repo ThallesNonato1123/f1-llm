@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from f1llm.charts import dark_layout
 from f1llm.errors import SessionDataUnavailable
 
 SUPPORTED_SESSION_TYPES = {"Race", "Qualifying", "Sprint"}
@@ -89,8 +90,6 @@ def build_best_sectors_chart(result: BestSectorsResponse, *, year: int, session_
     data = []
     layout = {
         "title": f"{year} {result.event_name} - {session_type} - Melhores setores",
-        "paper_bgcolor": "#ffffff",
-        "plot_bgcolor": "#ffffff",
         "annotations": [],
     }
 
@@ -108,7 +107,11 @@ def build_best_sectors_chart(result: BestSectorsResponse, *, year: int, session_
             "marker": {"color": [driver.team_color for driver in fastest]},
         })
         layout[f"xaxis{xaxis[1:]}"] = {"domain": domain, "title": f"{label} (s)", "showgrid": True}
-        layout[f"yaxis{yaxis[1:]}" if yaxis != "y" else "yaxis"] = {"autorange": "reversed"}
+        # Without an explicit anchor, a secondary y-axis (y2, y3) defaults to
+        # anchoring on the primary x-axis instead of its own subplot, so all
+        # three axes' tick labels stack on top of each other in the left
+        # margin instead of each sitting under its own bars.
+        layout[f"yaxis{yaxis[1:]}" if yaxis != "y" else "yaxis"] = {"autorange": "reversed", "anchor": xaxis}
         layout["annotations"].append({
             "text": label,
             "xref": f"{xaxis} domain", "yref": "paper",
@@ -116,4 +119,4 @@ def build_best_sectors_chart(result: BestSectorsResponse, *, year: int, session_
             "showarrow": False,
         })
 
-    return {"data": data, "layout": layout}
+    return {"data": data, "layout": dark_layout(layout)}

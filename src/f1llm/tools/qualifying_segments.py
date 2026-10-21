@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from f1llm.charts import dark_layout
 from f1llm.errors import SessionDataUnavailable
 
 MIN_SUPPORTED_YEAR = 2018
@@ -76,13 +77,11 @@ def build_qualifying_segment_bar_chart(result: QualifyingSegmentsResponse, *, ye
             "x": [round(getattr(team, attr) - fastest, 3) for team in ordered],
             "marker": {"color": [team.team_color for team in ordered]},
         }],
-        "layout": {
+        "layout": dark_layout({
             "title": f"{year} {result.event_name} - {segment}",
-            "paper_bgcolor": "#ffffff",
-            "plot_bgcolor": "#ffffff",
             "xaxis": {"title": "Gap (s)", "showgrid": True},
             "yaxis": {"autorange": "reversed"},
-        },
+        }),
     }
 
 
@@ -102,11 +101,9 @@ def build_qualifying_pace_evolution_chart(result: QualifyingSegmentsResponse, *,
 
     return {
         "data": data,
-        "layout": {
+        "layout": dark_layout({
             "title": f"{year} {result.event_name} - Evolução do ritmo na Qualifying",
-            "paper_bgcolor": "#ffffff",
-            "plot_bgcolor": "#ffffff",
             "xaxis": {"title": "Segmento", "showgrid": True},
             "yaxis": {"title": "Tempo de volta (s)", "showgrid": True},
-        },
+        }),
     }

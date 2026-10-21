@@ -122,6 +122,20 @@ def test_chart_table_has_one_row_per_driver_padded_to_15_laps_plus_average():
     )
 
 
+def test_chart_keeps_cell_text_dark_regardless_of_the_apps_dark_theme():
+    # Every cell fill (driver column, Plasma scale, highlight) is light, so
+    # cell text must stay dark even though the surrounding layout uses the
+    # app's light-on-dark font color — otherwise light text on a light fill
+    # is unreadable.
+    result = speeds_response([driver_speeds("HAM", [350.0])])
+
+    chart = build_top_speeds_chart(result, year=2026, session_type="Race")
+
+    [table] = chart["data"]
+    assert table["header"]["font"]["color"] == "#111111"
+    assert table["cells"]["font"]["color"] == "#111111"
+
+
 def test_chart_colors_non_max_cells_along_a_dark_purple_to_yellow_scale():
     # Lap 1 (360.0) is the session max: it gets the highlight color (tested separately),
     # not a Plasma color, so it's excluded from this scale check.
@@ -185,8 +199,8 @@ def test_chart_title_footer_and_background():
     assert layout["annotations"][0]["text"] == (
         "Voltas ordenadas pela velocidade máxima (15 melhores exibidas, média à direita)"
     )
-    assert layout["paper_bgcolor"] == "#ffffff"
-    assert layout["plot_bgcolor"] == "#ffffff"
+    assert layout["paper_bgcolor"] == "#111111"
+    assert layout["plot_bgcolor"] == "#111111"
 
 
 def test_rejects_unsupported_session_type():

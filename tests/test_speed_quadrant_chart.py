@@ -1,5 +1,3 @@
-import pytest
-
 from f1llm.tools.speed_quadrant import (
     SpeedQuadrantResponse,
     TeamSpeedPoint,
@@ -30,7 +28,11 @@ def test_chart_plots_one_point_per_team_colored_with_its_name_shown():
     assert trace["marker"]["color"] == ["#E8002D", "#27F4D2"]
 
 
-def test_chart_draws_8_region_labels_anchored_at_the_mean_of_all_teams():
+def test_chart_has_no_region_annotations_crowding_the_plot_area():
+    # Region hints used to be 8 arrow annotations converging on the data's
+    # mean point; with closely-clustered teams they all overlapped into an
+    # unreadable mess. The quadrant reading now lives in the axis titles
+    # instead, which never collide with the data.
     result = quadrant_response([
         team_point("FERRARI", mean_speed=200.0, top_speed=320.0),
         team_point("MERCEDES", mean_speed=195.0, top_speed=315.0),
@@ -38,22 +40,7 @@ def test_chart_draws_8_region_labels_anchored_at_the_mean_of_all_teams():
 
     chart = build_speed_quadrant_chart(result, year=2023, session_type="Qualifying")
 
-    annotations = chart["layout"]["annotations"]
-    assert {a["text"] for a in annotations} == {
-        "Lento",
-        "Rápido",
-        "Baixo Arrasto",
-        "Alto Arrasto",
-        "Correlacionado com Alta Eficiência",
-        "Correlacionado com Baixa Eficiência",
-        "Correlacionado com Baixa Carga Aerodinâmica",
-        "Correlacionado com Alta Carga Aerodinâmica",
-    }
-    assert len(annotations) == 8
-    for annotation in annotations:
-        assert annotation["x"] == pytest.approx(197.5)
-        assert annotation["y"] == pytest.approx(317.5)
-        assert annotation["showarrow"] is True
+    assert "annotations" not in chart["layout"]
 
 
 def test_chart_title_axes_and_background():
@@ -70,5 +57,5 @@ def test_chart_title_axes_and_background():
     assert layout["xaxis"]["showgrid"] is True
     assert layout["yaxis"]["title"] == "Velocidade máxima (km/h)"
     assert layout["yaxis"]["showgrid"] is True
-    assert layout["paper_bgcolor"] == "#ffffff"
-    assert layout["plot_bgcolor"] == "#ffffff"
+    assert layout["paper_bgcolor"] == "#111111"
+    assert layout["plot_bgcolor"] == "#111111"

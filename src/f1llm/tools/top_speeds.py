@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from f1llm.charts import BACKGROUND_COLOR, dark_layout
 from f1llm.errors import SessionDataUnavailable
 
 SUPPORTED_SESSION_TYPES = {"Race", "Qualifying", "Sprint"}
@@ -132,22 +133,28 @@ def build_top_speeds_chart(result: TopSpeedsResponse, *, year: int, session_type
     return {
         "data": [{
             "type": "table",
-            "header": {"values": ["Piloto"] + [str(n) for n in range(1, _COLUMN_COUNT + 1)] + ["Média"]},
+            "header": {
+                "values": ["Piloto"] + [str(n) for n in range(1, _COLUMN_COUNT + 1)] + ["Média"],
+                "font": {"color": BACKGROUND_COLOR},
+            },
             "cells": {
                 "values": [driver_column] + display_lap_columns + [display_average_column],
                 "fill": {"color": fill_colors},
+                # Every cell fill here (driver column, plasma scale, highlight)
+                # is light, so cell text needs to stay dark regardless of the
+                # app's light-on-dark theme — the layout's font color is for
+                # the title/footnote, not for these cells with their own fills.
+                "font": {"color": BACKGROUND_COLOR},
             },
         }],
-        "layout": {
+        "layout": dark_layout({
             "title": f"{year} {result.event_name} - {session_type} - Velocidade máxima (km/h) por volta",
             "height": 110 + 28 * len(result.drivers),
-            "paper_bgcolor": "#ffffff",
-            "plot_bgcolor": "#ffffff",
             "annotations": [{
                 "text": "Voltas ordenadas pela velocidade máxima (15 melhores exibidas, média à direita)",
                 "showarrow": False,
                 "xref": "paper", "yref": "paper",
                 "x": 0.5, "y": -0.08,
             }],
-        },
+        }),
     }

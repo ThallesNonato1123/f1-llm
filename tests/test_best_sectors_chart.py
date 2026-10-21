@@ -38,8 +38,21 @@ def test_chart_titles_and_background():
     layout = chart["layout"]
 
     assert layout["title"] == "2023 Monza Grand Prix - Qualifying - Melhores setores"
-    assert layout["paper_bgcolor"] == "#ffffff"
-    assert layout["plot_bgcolor"] == "#ffffff"
+    assert layout["paper_bgcolor"] == "#111111"
+    assert layout["plot_bgcolor"] == "#111111"
     assert layout["annotations"][0]["text"] == "S1"
     assert layout["annotations"][1]["text"] == "S2"
     assert layout["annotations"][2]["text"] == "S3"
+
+
+def test_each_sector_y_axis_is_anchored_to_its_own_x_axis():
+    # Without an anchor, y2/y3 default to the primary x-axis and all three
+    # axes' driver-code labels stack on top of each other on the left.
+    result = sectors_response([driver("VER", s1=28.0, s2=35.0, s3=27.0)])
+
+    chart = build_best_sectors_chart(result, year=2023, session_type="Qualifying")
+    layout = chart["layout"]
+
+    assert layout["yaxis"]["anchor"] == "x"
+    assert layout["yaxis2"]["anchor"] == "x2"
+    assert layout["yaxis3"]["anchor"] == "x3"

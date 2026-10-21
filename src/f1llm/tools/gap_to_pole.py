@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from f1llm.charts import dark_layout
 from f1llm.errors import SessionDataUnavailable
 
 SUPPORTED_SESSION_TYPES = {"Race", "Qualifying", "Sprint"}
@@ -77,11 +78,9 @@ def build_gap_to_pole_chart(result: GapToPoleResponse, *, year: int, session_typ
             "x": [driver.gap_seconds for driver in result.drivers],
             "marker": {"color": [driver.team_color for driver in result.drivers]},
         }],
-        "layout": {
+        "layout": dark_layout({
             "title": f"{year} {result.event_name} - {session_type} - Gap para a pole",
-            "paper_bgcolor": "#ffffff",
-            "plot_bgcolor": "#ffffff",
             "xaxis": {"title": "Gap (s)", "showgrid": True},
             "yaxis": {"autorange": "reversed"},
-        },
+        }),
     }

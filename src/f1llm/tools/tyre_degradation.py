@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date
 
+from f1llm.charts import dark_layout
 from f1llm.errors import SessionDataUnavailable
 from f1llm.tools.stints import COMPOUND_NAMES_PT
 from f1llm.track_status import neutralization_kind
@@ -212,11 +213,18 @@ def build_tyre_degradation_chart(result: TyreDegradationResponse, *, year: int, 
     all_lap_times = [point.fuel_corrected_lap_time for entry in result.entries for point in entry.points]
     y_range = [min(all_lap_times), max(all_lap_times)]
 
-    layout = {
+    layout = dark_layout({
         "title": f"{year} {result.event_name} - {session_type} - Degradação de pneu",
-        "paper_bgcolor": "#ffffff",
-        "plot_bgcolor": "#ffffff",
-        "legend": {"title": {"text": "Equipe"}},
+        # Horizontal legend above the subplots, not the default right-side
+        # position: with 3 subplots already spanning the full width, a
+        # right-side legend has no reserved margin and overlaps the 3rd one.
+        "legend": {
+            "title": {"text": "Equipe"},
+            "orientation": "h",
+            "x": 0.5, "xanchor": "center",
+            "y": 1.22, "yanchor": "bottom",
+        },
+        "margin": {"t": 120},
         "xaxis": {"domain": [0.0, 0.3], "title": "Idade do pneu (voltas)", "showgrid": True},
         "xaxis2": {"domain": [0.35, 0.65], "title": "Idade do pneu (voltas)", "showgrid": True},
         "xaxis3": {"domain": [0.7, 1.0], "title": "Idade do pneu (voltas)", "showgrid": True},
@@ -232,7 +240,7 @@ def build_tyre_degradation_chart(result: TyreDegradationResponse, *, year: int, 
             }
             for compound, (xref, _yaxis) in _COMPOUND_AXES.items()
         ],
-    }
+    })
 
     return {"data": data, "layout": layout}
 

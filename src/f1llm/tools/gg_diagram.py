@@ -202,31 +202,29 @@ def build_gg_diagram_chart(result: GGDiagramResponse, *, year: int, session_type
     all_values = [v for driver in result.drivers for point in driver.points for v in (point.lateral, point.longitudinal)]
     half_width = math.ceil(max((abs(v) for v in all_values), default=1.0))
 
+    # Explicit top/bottom margins: the per-driver "Average Accel" lines stack
+    # upward from the top of the plot (one per driver), and the footnote
+    # sits below the x-axis title — neither fits in Plotly's default margin,
+    # which is how they used to collide with the title and axis labels.
     layout = dark_layout({
         "title": f"{year} {result.event_name} - {session_type} - Diagrama G-G",
-        "xaxis": {"title": "Aceleração lateral (g)", "range": [-half_width, half_width]},
+        "xaxis": {
+            "title": "Aceleração lateral (g) — curvas à direita ← → curvas à esquerda",
+            "range": [-half_width, half_width],
+        },
         "yaxis": {
             "title": "Aceleração longitudinal (g)",
             "range": [-half_width, half_width],
             "scaleanchor": "x",
             "scaleratio": 1,
         },
+        "margin": {"t": 70 + 22 * len(result.drivers), "b": 90},
         "shapes": _g_circle_shapes(half_width),
         "annotations": [
             *[_average_accel_annotation(driver, index) for index, driver in enumerate(result.drivers)],
             {
-                "text": "Curvas à Direita ← → Curvas à Esquerda",
-                "xref": "paper", "yref": "paper", "x": 0.5, "y": 1.1,
-                "showarrow": False,
-            },
-            {
-                "text": "Frenagem / Tração",
-                "xref": "paper", "yref": "paper", "x": -0.08, "y": 0.5,
-                "showarrow": False, "textangle": -90,
-            },
-            {
                 "text": "Pontos distantes do centro indicam alta aderência",
-                "xref": "paper", "yref": "paper", "x": 0.5, "y": -0.12,
+                "xref": "paper", "yref": "paper", "x": 0.5, "y": -0.2,
                 "showarrow": False,
             },
         ],
