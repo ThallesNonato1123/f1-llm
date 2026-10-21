@@ -525,7 +525,6 @@ def _tool(name: str, description: str, properties: dict, required: list[str]) ->
     return {
         "name": name,
         "description": description,
-        "strict": True,
         "input_schema": {
             "type": "object",
             "properties": properties,
