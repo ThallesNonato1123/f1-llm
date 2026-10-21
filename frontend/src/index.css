@@ -30,7 +30,7 @@ button {
 
 .app-shell {
   display: flex;
-  min-height: 100dvh;
+  height: 100dvh;
   background:
     radial-gradient(circle at 60% 34%, rgba(225, 6, 0, 0.04), transparent 34%),
     #121214;
@@ -121,7 +121,7 @@ button {
 .main-panel {
   display: flex;
   min-width: 0;
-  min-height: 100dvh;
+  height: 100dvh;
   flex: 1;
   flex-direction: column;
 }
